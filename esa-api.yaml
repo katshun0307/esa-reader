@@ -1,0 +1,254 @@
+openapi: 3.0.3
+info:
+  title: esa API
+  version: v1
+  description: API reference for selected endpoints from esa.io.
+servers:
+  - url: https://api.esa.io
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: "Authorization: Bearer <access_token>"
+    accessTokenQuery:
+      type: apiKey
+      in: query
+      name: access_token
+      description: Access token as a query parameter.
+  schemas:
+    UserSummary:
+      type: object
+      properties:
+        myself:
+          type: boolean
+        name:
+          type: string
+        screen_name:
+          type: string
+        icon:
+          type: string
+          format: uri
+    Team:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Team ID (subdomain).
+        privacy:
+          type: string
+          enum:
+            - closed
+            - open
+        description:
+          type: string
+        icon:
+          type: string
+          format: uri
+        url:
+          type: string
+          format: uri
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        screen_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        icon:
+          type: string
+          format: uri
+        email:
+          type: string
+          format: email
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+    Post:
+      type: object
+      properties:
+        number:
+          type: integer
+          description: Post number within the team.
+        name:
+          type: string
+        full_name:
+          type: string
+        wip:
+          type: boolean
+        body_md:
+          type: string
+        body_html:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        message:
+          type: string
+        url:
+          type: string
+          format: uri
+        tags:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+          nullable: true
+        revision_number:
+          type: integer
+        created_by:
+          $ref: '#/components/schemas/UserSummary'
+        updated_by:
+          $ref: '#/components/schemas/UserSummary'
+        kind:
+          type: string
+          enum:
+            - stock
+            - flow
+        comments_count:
+          type: integer
+        tasks_count:
+          type: integer
+        done_tasks_count:
+          type: integer
+        stargazers_count:
+          type: integer
+        watchers_count:
+          type: integer
+        star:
+          type: boolean
+        watch:
+          type: boolean
+    PostListResponse:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        prev_page:
+          type: integer
+          nullable: true
+        next_page:
+          type: integer
+          nullable: true
+        total_count:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        max_per_page:
+          type: integer
+security:
+  - bearerAuth: []
+  - accessTokenQuery: []
+paths:
+  /v1/user:
+    get:
+      summary: Get current authenticated user
+      description: Returns the user associated with the access token.
+      parameters:
+        - name: include
+          in: query
+          description: Include related resources. Use "teams" to include the teams array.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /v1/teams/{team_name}/posts:
+    get:
+      summary: List posts in a team
+      description: Returns a list of posts.
+      parameters:
+        - name: team_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: q
+          in: query
+          description: Filter condition for posts.
+          schema:
+            type: string
+        - name: include
+          in: query
+          description: Include related resources (comments, comments.stargazers, stargazers).
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Sort key.
+          schema:
+            type: string
+            enum:
+              - updated
+              - created
+              - number
+              - stars
+              - watches
+              - comments
+              - best_match
+            default: updated
+        - name: order
+          in: query
+          description: Sort order.
+          schema:
+            type: string
+            enum:
+              - desc
+              - asc
+            default: desc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListResponse'
+  /v1/teams/{team_name}/posts/{post_number}:
+    get:
+      summary: Get a post
+      description: Returns the specified post.
+      parameters:
+        - name: team_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: post_number
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: include
+          in: query
+          description: Include related resources (comments, comments.stargazers, stargazers).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'

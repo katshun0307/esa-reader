@@ -13,3 +13,4 @@ serde = { version = "1", features = ["derive"] }
 toml = "0.9.11"
 toml_writer = "1.0.6"
 url = "2.5.8"
+esa-api = { path = "./packages/esa-api" }
