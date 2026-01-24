@@ -1,4 +1,7 @@
+mod config;
 mod fixtures;
+
+pub use config::*;
 pub use fixtures::*;
 
 use chrono::{DateTime, Utc};
