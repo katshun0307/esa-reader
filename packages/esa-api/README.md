@@ -26,11 +26,16 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultApi* | [**v1_teams_team_name_posts_get**](docs/DefaultApi.md#v1_teams_team_name_posts_get) | **get** /v1/teams/{team_name}/posts | List posts in a team
 *DefaultApi* | [**v1_teams_team_name_posts_post_number_get**](docs/DefaultApi.md#v1_teams_team_name_posts_post_number_get) | **get** /v1/teams/{team_name}/posts/{post_number} | Get a post
+*DefaultApi* | [**v1_teams_team_name_posts_post_number_star_delete**](docs/DefaultApi.md#v1_teams_team_name_posts_post_number_star_delete) | **delete** /v1/teams/{team_name}/posts/{post_number}/star | Unstar a post
+*DefaultApi* | [**v1_teams_team_name_posts_post_number_star_post**](docs/DefaultApi.md#v1_teams_team_name_posts_post_number_star_post) | **post** /v1/teams/{team_name}/posts/{post_number}/star | Star a post
+*DefaultApi* | [**v1_teams_team_name_posts_post_number_watch_delete**](docs/DefaultApi.md#v1_teams_team_name_posts_post_number_watch_delete) | **delete** /v1/teams/{team_name}/posts/{post_number}/watch | Unwatch a post
+*DefaultApi* | [**v1_teams_team_name_posts_post_number_watch_post**](docs/DefaultApi.md#v1_teams_team_name_posts_post_number_watch_post) | **post** /v1/teams/{team_name}/posts/{post_number}/watch | Watch a post
 *DefaultApi* | [**v1_user_get**](docs/DefaultApi.md#v1_user_get) | **get** /v1/user | Get current authenticated user
 
 
 ## Documentation For Models
 
+ - [InlineObject](docs/InlineObject.md)
  - [Post](docs/Post.md)
  - [PostListResponse](docs/PostListResponse.md)
  - [Team](docs/Team.md)

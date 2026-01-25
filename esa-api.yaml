@@ -252,3 +252,83 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Post'
+  /v1/teams/{team_name}/posts/{post_number}/watch:
+    post:
+      summary: Watch a post
+      description: Adds the post to the authenticated user's watch list.
+      parameters:
+        - name: team_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: post_number
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+    delete:
+      summary: Unwatch a post
+      description: Removes the post from the authenticated user's watch list.
+      parameters:
+        - name: team_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: post_number
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+  /v1/teams/{team_name}/posts/{post_number}/star:
+    post:
+      summary: Star a post
+      description: Adds a star to the post. You can include a message body with the star.
+      parameters:
+        - name: team_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: post_number
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                  description: Optional message attached to the star.
+      responses:
+        '204':
+          description: No Content
+    delete:
+      summary: Unstar a post
+      description: Removes your star from the post.
+      parameters:
+        - name: team_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: post_number
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content

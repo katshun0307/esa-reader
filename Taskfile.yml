@@ -1,0 +1,13 @@
+version: '3'
+
+tasks:
+  generate-esa-api:
+    desc: Generate Rust client from esa-api.yaml using openapi-generator
+    cmds:
+      - |
+        docker run --rm -v "$(pwd):/local" openapitools/openapi-generator-cli:v5.1.1 generate \
+          --input-spec /local/esa-api.yaml \
+          --package-name esa-api \
+          --generator-name rust \
+          --output /local/packages/esa-api \
+          --additional-properties=useSingleRequestParameter=true,title=esa

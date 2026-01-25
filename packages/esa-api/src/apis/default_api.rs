@@ -37,6 +37,35 @@ pub struct V1TeamsTeamNamePostsPostNumberGetParams {
     pub include: Option<String>
 }
 
+/// struct for passing parameters to the method `v1_teams_team_name_posts_post_number_star_delete`
+#[derive(Clone, Debug)]
+pub struct V1TeamsTeamNamePostsPostNumberStarDeleteParams {
+    pub team_name: String,
+    pub post_number: i32
+}
+
+/// struct for passing parameters to the method `v1_teams_team_name_posts_post_number_star_post`
+#[derive(Clone, Debug)]
+pub struct V1TeamsTeamNamePostsPostNumberStarPostParams {
+    pub team_name: String,
+    pub post_number: i32,
+    pub inline_object: Option<crate::models::InlineObject>
+}
+
+/// struct for passing parameters to the method `v1_teams_team_name_posts_post_number_watch_delete`
+#[derive(Clone, Debug)]
+pub struct V1TeamsTeamNamePostsPostNumberWatchDeleteParams {
+    pub team_name: String,
+    pub post_number: i32
+}
+
+/// struct for passing parameters to the method `v1_teams_team_name_posts_post_number_watch_post`
+#[derive(Clone, Debug)]
+pub struct V1TeamsTeamNamePostsPostNumberWatchPostParams {
+    pub team_name: String,
+    pub post_number: i32
+}
+
 /// struct for passing parameters to the method `v1_user_get`
 #[derive(Clone, Debug)]
 pub struct V1UserGetParams {
@@ -56,6 +85,34 @@ pub enum V1TeamsTeamNamePostsGetError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum V1TeamsTeamNamePostsPostNumberGetError {
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method `v1_teams_team_name_posts_post_number_star_delete`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum V1TeamsTeamNamePostsPostNumberStarDeleteError {
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method `v1_teams_team_name_posts_post_number_star_post`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum V1TeamsTeamNamePostsPostNumberStarPostError {
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method `v1_teams_team_name_posts_post_number_watch_delete`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum V1TeamsTeamNamePostsPostNumberWatchDeleteError {
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method `v1_teams_team_name_posts_post_number_watch_post`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum V1TeamsTeamNamePostsPostNumberWatchPostError {
     UnknownValue(serde_json::Value),
 }
 
@@ -165,6 +222,176 @@ pub async fn v1_teams_team_name_posts_post_number_get(configuration: &configurat
         serde_json::from_str(&local_var_content).map_err(Error::from)
     } else {
         let local_var_entity: Option<V1TeamsTeamNamePostsPostNumberGetError> = serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent { status: local_var_status, content: local_var_content, entity: local_var_entity };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Removes your star from the post.
+pub async fn v1_teams_team_name_posts_post_number_star_delete(configuration: &configuration::Configuration, params: V1TeamsTeamNamePostsPostNumberStarDeleteParams) -> Result<(), Error<V1TeamsTeamNamePostsPostNumberStarDeleteError>> {
+    // unbox the parameters
+    let team_name = params.team_name;
+    let post_number = params.post_number;
+
+
+    let local_var_client = &configuration.client;
+
+    let local_var_uri_str = format!("{}/v1/teams/{team_name}/posts/{post_number}/star", configuration.base_path, team_name=crate::apis::urlencode(team_name), post_number=post_number);
+    let mut local_var_req_builder = local_var_client.delete(local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("access_token", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = configuration.user_agent {
+        local_var_req_builder = local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        Ok(())
+    } else {
+        let local_var_entity: Option<V1TeamsTeamNamePostsPostNumberStarDeleteError> = serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent { status: local_var_status, content: local_var_content, entity: local_var_entity };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Adds a star to the post. You can include a message body with the star.
+pub async fn v1_teams_team_name_posts_post_number_star_post(configuration: &configuration::Configuration, params: V1TeamsTeamNamePostsPostNumberStarPostParams) -> Result<(), Error<V1TeamsTeamNamePostsPostNumberStarPostError>> {
+    // unbox the parameters
+    let team_name = params.team_name;
+    let post_number = params.post_number;
+    let inline_object = params.inline_object;
+
+
+    let local_var_client = &configuration.client;
+
+    let local_var_uri_str = format!("{}/v1/teams/{team_name}/posts/{post_number}/star", configuration.base_path, team_name=crate::apis::urlencode(team_name), post_number=post_number);
+    let mut local_var_req_builder = local_var_client.post(local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("access_token", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = configuration.user_agent {
+        local_var_req_builder = local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+    local_var_req_builder = local_var_req_builder.json(&inline_object);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        Ok(())
+    } else {
+        let local_var_entity: Option<V1TeamsTeamNamePostsPostNumberStarPostError> = serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent { status: local_var_status, content: local_var_content, entity: local_var_entity };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Removes the post from the authenticated user's watch list.
+pub async fn v1_teams_team_name_posts_post_number_watch_delete(configuration: &configuration::Configuration, params: V1TeamsTeamNamePostsPostNumberWatchDeleteParams) -> Result<(), Error<V1TeamsTeamNamePostsPostNumberWatchDeleteError>> {
+    // unbox the parameters
+    let team_name = params.team_name;
+    let post_number = params.post_number;
+
+
+    let local_var_client = &configuration.client;
+
+    let local_var_uri_str = format!("{}/v1/teams/{team_name}/posts/{post_number}/watch", configuration.base_path, team_name=crate::apis::urlencode(team_name), post_number=post_number);
+    let mut local_var_req_builder = local_var_client.delete(local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("access_token", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = configuration.user_agent {
+        local_var_req_builder = local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        Ok(())
+    } else {
+        let local_var_entity: Option<V1TeamsTeamNamePostsPostNumberWatchDeleteError> = serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent { status: local_var_status, content: local_var_content, entity: local_var_entity };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Adds the post to the authenticated user's watch list.
+pub async fn v1_teams_team_name_posts_post_number_watch_post(configuration: &configuration::Configuration, params: V1TeamsTeamNamePostsPostNumberWatchPostParams) -> Result<(), Error<V1TeamsTeamNamePostsPostNumberWatchPostError>> {
+    // unbox the parameters
+    let team_name = params.team_name;
+    let post_number = params.post_number;
+
+
+    let local_var_client = &configuration.client;
+
+    let local_var_uri_str = format!("{}/v1/teams/{team_name}/posts/{post_number}/watch", configuration.base_path, team_name=crate::apis::urlencode(team_name), post_number=post_number);
+    let mut local_var_req_builder = local_var_client.post(local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("access_token", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = configuration.user_agent {
+        local_var_req_builder = local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        Ok(())
+    } else {
+        let local_var_entity: Option<V1TeamsTeamNamePostsPostNumberWatchPostError> = serde_json::from_str(&local_var_content).ok();
         let local_var_error = ResponseContent { status: local_var_status, content: local_var_content, entity: local_var_entity };
         Err(Error::ResponseError(local_var_error))
     }

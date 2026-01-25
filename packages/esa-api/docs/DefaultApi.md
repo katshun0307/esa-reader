@@ -6,6 +6,10 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**v1_teams_team_name_posts_get**](DefaultApi.md#v1_teams_team_name_posts_get) | **get** /v1/teams/{team_name}/posts | List posts in a team
 [**v1_teams_team_name_posts_post_number_get**](DefaultApi.md#v1_teams_team_name_posts_post_number_get) | **get** /v1/teams/{team_name}/posts/{post_number} | Get a post
+[**v1_teams_team_name_posts_post_number_star_delete**](DefaultApi.md#v1_teams_team_name_posts_post_number_star_delete) | **delete** /v1/teams/{team_name}/posts/{post_number}/star | Unstar a post
+[**v1_teams_team_name_posts_post_number_star_post**](DefaultApi.md#v1_teams_team_name_posts_post_number_star_post) | **post** /v1/teams/{team_name}/posts/{post_number}/star | Star a post
+[**v1_teams_team_name_posts_post_number_watch_delete**](DefaultApi.md#v1_teams_team_name_posts_post_number_watch_delete) | **delete** /v1/teams/{team_name}/posts/{post_number}/watch | Unwatch a post
+[**v1_teams_team_name_posts_post_number_watch_post**](DefaultApi.md#v1_teams_team_name_posts_post_number_watch_post) | **post** /v1/teams/{team_name}/posts/{post_number}/watch | Watch a post
 [**v1_user_get**](DefaultApi.md#v1_user_get) | **get** /v1/user | Get current authenticated user
 
 
@@ -72,6 +76,131 @@ Name | Type | Description  | Required | Notes
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## v1_teams_team_name_posts_post_number_star_delete
+
+> v1_teams_team_name_posts_post_number_star_delete(team_name, post_number)
+Unstar a post
+
+Removes your star from the post.
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**team_name** | **String** |  | [required] |
+**post_number** | **i32** |  | [required] |
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[accessTokenQuery](../README.md#accessTokenQuery), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## v1_teams_team_name_posts_post_number_star_post
+
+> v1_teams_team_name_posts_post_number_star_post(team_name, post_number, inline_object)
+Star a post
+
+Adds a star to the post. You can include a message body with the star.
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**team_name** | **String** |  | [required] |
+**post_number** | **i32** |  | [required] |
+**inline_object** | Option<[**InlineObject**](InlineObject.md)> |  |  |
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[accessTokenQuery](../README.md#accessTokenQuery), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## v1_teams_team_name_posts_post_number_watch_delete
+
+> v1_teams_team_name_posts_post_number_watch_delete(team_name, post_number)
+Unwatch a post
+
+Removes the post from the authenticated user's watch list.
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**team_name** | **String** |  | [required] |
+**post_number** | **i32** |  | [required] |
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[accessTokenQuery](../README.md#accessTokenQuery), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## v1_teams_team_name_posts_post_number_watch_post
+
+> v1_teams_team_name_posts_post_number_watch_post(team_name, post_number)
+Watch a post
+
+Adds the post to the authenticated user's watch list.
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**team_name** | **String** |  | [required] |
+**post_number** | **i32** |  | [required] |
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[accessTokenQuery](../README.md#accessTokenQuery), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: Not defined
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

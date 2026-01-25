@@ -1,3 +1,5 @@
+pub mod inline_object;
+pub use self::inline_object::InlineObject;
 pub mod post;
 pub use self::post::Post;
 pub mod post_list_response;
