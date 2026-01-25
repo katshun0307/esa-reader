@@ -1,5 +1,5 @@
 use crate::{domains::Post, http_gateways::EsaClientHttpGateway};
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use md_tui::{
     nodes::{root::Component, textcomponent::TextComponent},
     parser::parse_markdown,
@@ -14,6 +14,7 @@ pub struct Content {
 pub struct PostContent {
     pub content: Option<Content>,
     pub scroll: u16,
+    view_height: u16,
     pub api: Box<dyn EsaClientHttpGateway>,
 }
 
@@ -22,23 +23,22 @@ impl PostContent {
         Self {
             content: None,
             scroll: 0,
+            view_height: 0,
             api,
         }
     }
 }
 
 impl PostContent {
-    pub fn show_post(&mut self, post: &Post) -> anyhow::Result<()> {
-        let runtime = tokio::runtime::Runtime::new()?;
-        let markdown_content = runtime.block_on(async {
-            self.api
-                .fetch_post_content(&post.post_number)
-                .await
-                .unwrap_or_else(|e| {
-                    eprintln!("failed to fetch post content: {}", e);
-                    String::from("# Error\nFailed to load content.")
-                })
-        });
+    pub async fn show_post(&mut self, post: &Post) -> anyhow::Result<()> {
+        let markdown_content = self
+            .api
+            .fetch_post_content(&post.post_number)
+            .await
+            .unwrap_or_else(|e| {
+                eprintln!("failed to fetch post content: {}", e);
+                String::from("# Error\nFailed to load content.")
+            });
         let content = Content {
             post: post.clone(),
             markdown_content,
@@ -53,8 +53,16 @@ impl PostContent {
             return;
         }
         match key.code {
-            KeyCode::Char('j') | KeyCode::Down => self.scroll = self.scroll.saturating_add(1),
-            KeyCode::Char('k') | KeyCode::Up => self.scroll = self.scroll.saturating_sub(1),
+            KeyCode::Char(' ') => {
+                if self.view_height == 0 {
+                    return;
+                }
+                if key.modifiers.contains(KeyModifiers::SHIFT) {
+                    self.scroll = self.scroll.saturating_sub(self.view_height);
+                } else {
+                    self.scroll = self.scroll.saturating_add(self.view_height);
+                }
+            }
             _ => {}
         }
     }
@@ -102,6 +110,7 @@ impl Widget for &mut PostContent {
         let inner_area = block.inner(area);
         block.render(area, buf);
 
+        self.view_height = inner_area.height;
         let max_scroll = {
             let Some(markdown_content) = &self.content.as_ref().map(|c| &c.markdown_content) else {
                 return;

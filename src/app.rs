@@ -1,12 +1,15 @@
 use crate::domains::WorkspaceConfig;
 use crate::http_gateways::EsaClient;
 use crate::widgets::{self};
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Layout},
 };
 use std::io;
+use futures_util::StreamExt;
+use std::time::Duration;
+use tokio::time::interval;
 
 pub struct App {
     exit: bool,
@@ -26,10 +29,13 @@ impl App {
     }
 
     /// runs the application's main loop until the user quits
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        self.post_list.init().await;
+        let mut events = EventStream::new();
+        let mut tick = interval(Duration::from_millis(250));
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events()?;
+            self.handle_events(&mut events, &mut tick).await?;
         }
         Ok(())
     }
@@ -42,32 +48,40 @@ impl App {
         frame.render_widget(&mut self.post_content, right_area);
     }
 
-    fn handle_events(&mut self) -> io::Result<()> {
-        match event::read()? {
-            // it's important to check that the event is a key press event as
-            // crossterm also emits key release and repeat events on Windows.
-            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event)
+    async fn handle_events(
+        &mut self,
+        events: &mut EventStream,
+        tick: &mut tokio::time::Interval,
+    ) -> io::Result<()> {
+        tokio::select! {
+            maybe_event = events.next() => {
+                if let Some(Ok(Event::Key(key_event))) = maybe_event {
+                    if key_event.kind == KeyEventKind::Press {
+                        self.handle_key_event(key_event).await;
+                    }
+                }
             }
-            _ => {}
-        };
+            _ = tick.tick() => {}
+        }
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
-        self.post_list.handle_key(key_event);
+    async fn handle_key_event(&mut self, key_event: KeyEvent) {
+        self.post_list.handle_key(key_event).await;
         self.post_content.handle_key(key_event);
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Enter => {
                 if let Some(selected_post) = self.post_list.selected_post() {
-                    self.post_content.show_post(selected_post).unwrap();
+                    if let Err(e) = self.post_content.show_post(selected_post).await {
+                        eprintln!("failed to show post: {}", e);
+                    }
                 }
             }
-            KeyCode::Char('w') => self.post_list.watch_selected(),
-            KeyCode::Char('W') => self.post_list.unwatch_selected(),
-            KeyCode::Char('s') => self.post_list.star_selected(),
-            KeyCode::Char('S') => self.post_list.unstar_selected(),
+            KeyCode::Char('w') => self.post_list.watch_selected().await,
+            KeyCode::Char('W') => self.post_list.unwatch_selected().await,
+            KeyCode::Char('s') => self.post_list.star_selected().await,
+            KeyCode::Char('S') => self.post_list.unstar_selected().await,
             _ => {}
         }
     }

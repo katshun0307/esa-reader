@@ -11,14 +11,33 @@ extern crate rstest;
 extern crate insta;
 
 use app::App;
+use crossterm::{
+    execute,
+    event::{KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
 use find_config::find_config_path;
+use ratatui::{DefaultTerminal, Terminal, backend::CrosstermBackend};
 use std::io;
 
 use crate::domains::Config;
 
-fn main() -> io::Result<()> {
+#[tokio::main]
+async fn main() -> io::Result<()> {
     let config = get_config().unwrap();
-    ratatui::run(|terminal| App::new(&config.current_workspace().1).run(terminal))
+    let mut terminal = init_terminal()?;
+    let res = App::new(&config.current_workspace().1)
+        .run(&mut terminal)
+        .await;
+    let restore_res = restore_terminal(&mut terminal);
+    if let Err(err) = res {
+        if let Err(restore_err) = restore_res {
+            eprintln!("failed to restore terminal: {}", restore_err);
+        }
+        return Err(err);
+    }
+    restore_res?;
+    Ok(())
 }
 
 fn get_config() -> anyhow::Result<Config> {
@@ -36,4 +55,34 @@ fn get_config() -> anyhow::Result<Config> {
     } else {
         anyhow::bail!("config file not found");
     }
+}
+
+fn init_terminal() -> io::Result<DefaultTerminal> {
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(
+        stdout,
+        EnterAlternateScreen,
+        PushKeyboardEnhancementFlags(
+            KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
+                | KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
+                | KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS
+                | KeyboardEnhancementFlags::REPORT_EVENT_TYPES
+        )
+    )?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    terminal.clear()?;
+    Ok(terminal)
+}
+
+fn restore_terminal(terminal: &mut DefaultTerminal) -> io::Result<()> {
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        PopKeyboardEnhancementFlags,
+        LeaveAlternateScreen
+    )?;
+    terminal.show_cursor()?;
+    Ok(())
 }

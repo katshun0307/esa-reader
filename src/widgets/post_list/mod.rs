@@ -26,21 +26,19 @@ pub struct PostList {
 
 impl PostList {
     pub fn new(api: Box<dyn EsaClientHttpGateway>, post_views: Vec<PostViewConfig>) -> Self {
-        let mut s = Self {
+        Self {
             posts: vec![],
             state: ListState::default(),
             post_views,
             selected_view: 0,
             api,
-        };
-        s.init();
-        s
+        }
     }
 }
 
 impl PostList {
-    fn init(&mut self) {
-        match self.fetch_posts() {
+    pub async fn init(&mut self) {
+        match self.fetch_posts().await {
             Ok(posts) => {
                 self.posts = posts;
                 if !self.posts.is_empty() {
@@ -53,18 +51,17 @@ impl PostList {
         }
     }
 
-    fn fetch_posts(&self) -> anyhow::Result<Vec<Post>> {
-        let runtime = tokio::runtime::Runtime::new()?;
+    async fn fetch_posts(&self) -> anyhow::Result<Vec<Post>> {
         let query = self
             .post_views
             .get(self.selected_view)
             .and_then(|view| view.query.clone());
-        let posts = runtime.block_on(async { self.api.fetch_posts(query).await })?;
+        let posts = self.api.fetch_posts(query).await?;
         Ok(posts)
     }
 
-    fn refresh_posts(&mut self) {
-        match self.fetch_posts() {
+    async fn refresh_posts(&mut self) {
+        match self.fetch_posts().await {
             Ok(posts) => {
                 self.posts = posts;
                 if self.posts.is_empty() {
@@ -79,89 +76,61 @@ impl PostList {
         }
     }
 
-    pub fn handle_key(&mut self, key: KeyEvent) {
+    pub async fn handle_key(&mut self, key: KeyEvent) {
         if key.kind != KeyEventKind::Press {
             return;
         }
         match key.code {
             KeyCode::Char('j') | KeyCode::Down => self.state.select_next(),
             KeyCode::Char('k') | KeyCode::Up => self.state.select_previous(),
-            KeyCode::Char('h') | KeyCode::Left => self.select_prev_view(),
-            KeyCode::Char('l') | KeyCode::Right => self.select_next_view(),
+            KeyCode::Char('h') | KeyCode::Left => self.select_prev_view().await,
+            KeyCode::Char('l') | KeyCode::Right => self.select_next_view().await,
             _ => {}
         }
     }
 
-    pub fn watch_selected(&mut self) {
+    pub async fn watch_selected(&mut self) {
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
-        let runtime = match tokio::runtime::Runtime::new() {
-            Ok(runtime) => runtime,
-            Err(e) => {
-                eprintln!("failed to create tokio runtime: {}", e);
-                return;
-            }
-        };
-        if let Err(e) = runtime.block_on(async { self.api.watch_post(&post_number).await }) {
+        if let Err(e) = self.api.watch_post(&post_number).await {
             eprintln!("failed to watch post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection();
+        self.refresh_posts_keep_selection().await;
     }
 
-    pub fn unwatch_selected(&mut self) {
+    pub async fn unwatch_selected(&mut self) {
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
-        let runtime = match tokio::runtime::Runtime::new() {
-            Ok(runtime) => runtime,
-            Err(e) => {
-                eprintln!("failed to create tokio runtime: {}", e);
-                return;
-            }
-        };
-        if let Err(e) = runtime.block_on(async { self.api.unwatch_post(&post_number).await }) {
+        if let Err(e) = self.api.unwatch_post(&post_number).await {
             eprintln!("failed to unwatch post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection();
+        self.refresh_posts_keep_selection().await;
     }
 
-    pub fn star_selected(&mut self) {
+    pub async fn star_selected(&mut self) {
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
-        let runtime = match tokio::runtime::Runtime::new() {
-            Ok(runtime) => runtime,
-            Err(e) => {
-                eprintln!("failed to create tokio runtime: {}", e);
-                return;
-            }
-        };
-        if let Err(e) = runtime.block_on(async { self.api.star_post(&post_number).await }) {
+        if let Err(e) = self.api.star_post(&post_number).await {
             eprintln!("failed to star post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection();
+        self.refresh_posts_keep_selection().await;
     }
 
-    pub fn unstar_selected(&mut self) {
+    pub async fn unstar_selected(&mut self) {
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
-        let runtime = match tokio::runtime::Runtime::new() {
-            Ok(runtime) => runtime,
-            Err(e) => {
-                eprintln!("failed to create tokio runtime: {}", e);
-                return;
-            }
-        };
-        if let Err(e) = runtime.block_on(async { self.api.unstar_post(&post_number).await }) {
+        if let Err(e) = self.api.unstar_post(&post_number).await {
             eprintln!("failed to unstar post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection();
+        self.refresh_posts_keep_selection().await;
     }
 
     pub fn selected_post(&self) -> Option<&Post> {
@@ -172,7 +141,7 @@ impl PostList {
         }
     }
 
-    fn select_prev_view(&mut self) {
+    async fn select_prev_view(&mut self) {
         if self.post_views.is_empty() {
             return;
         }
@@ -181,15 +150,15 @@ impl PostList {
         } else {
             self.selected_view = self.selected_view.saturating_sub(1);
         }
-        self.refresh_posts();
+        self.refresh_posts().await;
     }
 
-    fn select_next_view(&mut self) {
+    async fn select_next_view(&mut self) {
         if self.post_views.is_empty() {
             return;
         }
         self.selected_view = (self.selected_view + 1) % self.post_views.len();
-        self.refresh_posts();
+        self.refresh_posts().await;
     }
 
     fn selected_post_number(&self) -> Option<crate::domains::PostNumber> {
@@ -198,9 +167,9 @@ impl PostList {
         Some(crate::domains::PostNumber::from(post.post_number.to_i32()))
     }
 
-    fn refresh_posts_keep_selection(&mut self) {
+    async fn refresh_posts_keep_selection(&mut self) {
         let selected = self.state.selected();
-        match self.fetch_posts() {
+        match self.fetch_posts().await {
             Ok(posts) => {
                 self.posts = posts;
                 if self.posts.is_empty() {

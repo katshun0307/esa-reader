@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.100"
 chrono = "0.4.43"
-crossterm = "0.29.0"
+crossterm = { version = "0.29.0", features = ["event-stream"] }
 md-tui = "0.9.3"
 ratatui = "0.30.0"
 serde = { version = "1", features = ["derive"] }
@@ -16,5 +16,6 @@ url = "2.5.8"
 esa-api = { path = "./packages/esa-api" }
 tokio = { version = "1.45.1", features = ["rt-multi-thread", "macros"] }
 async-trait = "0.1.89"
+futures-util = "0.3.31"
 rstest = "0.26.1"
 insta = { version = "1.46.1", features = ["redactions", "json"] }
