@@ -15,10 +15,29 @@ TOML で設定します。アプリは `workspaces` の先頭に定義された�
 team_name = "my_team"
 api_endpoint = "https://api.esa.io"
 token = "my_token"
+theme = "dark"
 
 [workspaces.default.post_views.all]
 title = "All Posts"
 query = "sort:updated"
+
+[themes.dark]
+primary = "#E2E8F0"
+muted = "#94A3B8"
+accent = "#38BDF8"
+error = "#F87171"
+success = "#34D399"
+warning = "#FBBF24"
+link = "#60A5FA"
+
+[themes.light]
+primary = "#0F172A"
+muted = "#475569"
+accent = "#0284C7"
+error = "#DC2626"
+success = "#059669"
+warning = "#D97706"
+link = "#2563EB"
 ```
 
 ### 各項目
@@ -27,6 +46,13 @@ query = "sort:updated"
 - `workspaces.<name>.token`: API トークン
 - `workspaces.<name>.post_views.<name>.title`: タブに表示される名称
 - `workspaces.<name>.post_views.<name>.query`: 一覧取得時の検索クエリ（未指定なら `sort:updated`）
+- `workspaces.<name>.theme`: 使用するテーマ名（`themes.<name>` のキー）
+- `themes.<name>.<role>`: role に対応する色（例: `primary`, `muted`, `accent`, `error`, `success`, `warning`, `link`）
+
+### カラー設定について
+- 背景色はターミナルの設定を尊重します（設定項目はありません）。
+- role は「色そのもの」ではなく「表示目的」を表します。UI 側では role を使い、実際の色味は `themes.<name>.<role>` で指定します。
+- `themes.dark` と `themes.light` は Tailwind のカラーパレットを参考にした推奨値です。
 
 ## 設定ファイルのパス
 以下の順で探索されます。最初に見つかったファイルが使用されます。

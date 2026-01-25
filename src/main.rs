@@ -20,15 +20,16 @@ use find_config::find_config_path;
 use ratatui::{DefaultTerminal, Terminal, backend::CrosstermBackend};
 use std::io;
 
-use crate::domains::Config;
+use crate::domains::{Config, Theme};
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let config = get_config().unwrap();
+    let (workspace_name, workspace) = config.current_workspace();
+    let theme_config = config.get_theme(&workspace_name);
+    let theme = Theme::from_config(&theme_config);
     let mut terminal = init_terminal()?;
-    let res = App::new(&config.current_workspace().1)
-        .run(&mut terminal)
-        .await;
+    let res = App::new(&workspace, theme).run(&mut terminal).await;
     let restore_res = restore_terminal(&mut terminal);
     if let Err(err) = res {
         if let Err(restore_err) = restore_res {

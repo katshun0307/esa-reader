@@ -1,4 +1,4 @@
-use crate::domains::WorkspaceConfig;
+use crate::domains::{Theme, WorkspaceConfig};
 use crate::http_gateways::EsaClient;
 use crate::widgets::{self};
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind};
@@ -19,13 +19,13 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(conf: &WorkspaceConfig) -> Self {
+    pub fn new(conf: &WorkspaceConfig, theme: Theme) -> Self {
         let api = Box::new(EsaClient::new(&conf.team_name(), &conf.token()));
         let post_views = conf.post_views.values().cloned().collect();
         Self {
             exit: false,
-            post_list: widgets::PostList::new(api.clone(), post_views),
-            post_content: widgets::PostContent::new(api),
+            post_list: widgets::PostList::new(api.clone(), post_views, theme.clone()),
+            post_content: widgets::PostContent::new(api, theme),
         }
     }
 

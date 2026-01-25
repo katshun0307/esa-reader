@@ -1,10 +1,10 @@
-use crate::{domains::Post, http_gateways::EsaClientHttpGateway};
+use crate::{domains::{Post, Theme}, http_gateways::EsaClientHttpGateway};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use md_tui::{
     nodes::{root::Component, textcomponent::TextComponent},
     parser::parse_markdown,
 };
-use ratatui::{layout::Rect, prelude::Widget};
+use ratatui::{layout::Rect, prelude::Widget, style::Style};
 
 pub struct Content {
     pub post: Post,
@@ -16,15 +16,17 @@ pub struct PostContent {
     pub scroll: u16,
     view_height: u16,
     pub api: Box<dyn EsaClientHttpGateway>,
+    theme: Theme,
 }
 
 impl PostContent {
-    pub fn new(api: Box<dyn EsaClientHttpGateway>) -> Self {
+    pub fn new(api: Box<dyn EsaClientHttpGateway>, theme: Theme) -> Self {
         Self {
             content: None,
             scroll: 0,
             view_height: 0,
             api,
+            theme,
         }
     }
 }
@@ -106,7 +108,9 @@ impl Widget for &mut PostContent {
     fn render(self, area: Rect, buf: &mut ratatui::buffer::Buffer) {
         let block = ratatui::widgets::Block::default()
             .title("Post Content")
-            .borders(ratatui::widgets::Borders::ALL);
+            .borders(ratatui::widgets::Borders::ALL)
+            .border_style(Style::new().fg(self.theme.muted))
+            .title_style(Style::new().fg(self.theme.primary));
         let inner_area = block.inner(area);
         block.render(area, buf);
 

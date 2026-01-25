@@ -6,7 +6,26 @@ expression: toml_str
 team_name = "my_team"
 api_endpoint = "https://api.esa.io"
 token = "my_token"
+theme = "dark"
 
 [workspaces.default.post_views.all]
 title = "All Posts"
 query = "sort:updated"
+
+[themes.dark]
+primary = "#E2E8F0"
+muted = "#94A3B8"
+accent = "#38BDF8"
+error = "#F87171"
+success = "#34D399"
+warning = "#FBBF24"
+link = "#60A5FA"
+
+[themes.light]
+primary = "#0F172A"
+muted = "#475569"
+accent = "#0284C7"
+error = "#DC2626"
+success = "#059669"
+warning = "#D97706"
+link = "#2563EB"

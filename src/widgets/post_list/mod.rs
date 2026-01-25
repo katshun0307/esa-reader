@@ -2,19 +2,17 @@ use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
-    style::{Modifier, Style, palette::tailwind::SLATE},
-    text::Line,
+    style::{Modifier, Style},
+    text::{Line, Span},
     widgets::{
         Block, Borders, HighlightSpacing, List, ListItem, ListState, StatefulWidget, Tabs, Widget,
     },
 };
 
 use crate::{
-    domains::{Post, PostViewConfig},
+    domains::{Post, PostViewConfig, Theme},
     http_gateways::EsaClientHttpGateway,
 };
-
-const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
 
 pub struct PostList {
     pub posts: Vec<Post>,
@@ -22,16 +20,22 @@ pub struct PostList {
     post_views: Vec<PostViewConfig>,
     selected_view: usize,
     pub api: Box<dyn EsaClientHttpGateway>,
+    theme: Theme,
 }
 
 impl PostList {
-    pub fn new(api: Box<dyn EsaClientHttpGateway>, post_views: Vec<PostViewConfig>) -> Self {
+    pub fn new(
+        api: Box<dyn EsaClientHttpGateway>,
+        post_views: Vec<PostViewConfig>,
+        theme: Theme,
+    ) -> Self {
         Self {
             posts: vec![],
             state: ListState::default(),
             post_views,
             selected_view: 0,
             api,
+            theme,
         }
     }
 }
@@ -195,14 +199,29 @@ impl PostList {
                 .collect()
         };
         let tabs = Tabs::new(titles)
-            .block(Block::default().title("Post Views").borders(Borders::ALL))
+            .block(
+                Block::default()
+                    .title("Post Views")
+                    .borders(Borders::ALL)
+                    .border_style(Style::new().fg(self.theme.muted))
+                    .title_style(Style::new().fg(self.theme.primary)),
+            )
             .select(self.selected_view)
-            .highlight_style(SELECTED_STYLE);
+            .style(Style::new().fg(self.theme.primary))
+            .highlight_style(
+                Style::new()
+                    .fg(self.theme.accent)
+                    .add_modifier(Modifier::BOLD),
+            );
         Widget::render(tabs, area, buf);
     }
 
     fn render_list(&mut self, area: Rect, buf: &mut Buffer) {
-        let block = Block::default().title("Posts").borders(Borders::ALL);
+        let block = Block::default()
+            .title("Posts")
+            .borders(Borders::ALL)
+            .border_style(Style::new().fg(self.theme.muted))
+            .title_style(Style::new().fg(self.theme.primary));
 
         let items: Vec<ListItem> = self
             .posts
@@ -223,16 +242,23 @@ impl PostList {
                 let meta = format!("@{}  {}", post.updated_by.id.0, updated_at);
                 let stats = format!("☆ {} 👁️ {}", post.stars, post.watches);
                 ListItem::new(vec![
-                    Line::from(header),
-                    Line::from(meta),
-                    Line::from(stats),
+                    Line::from(Span::styled(
+                        header,
+                        Style::new().fg(self.theme.primary),
+                    )),
+                    Line::from(Span::styled(meta, Style::new().fg(self.theme.muted))),
+                    Line::from(Span::styled(stats, Style::new().fg(self.theme.muted))),
                 ])
             })
             .collect();
 
         let list = List::new(items)
             .block(block)
-            .highlight_style(SELECTED_STYLE)
+            .highlight_style(
+                Style::new()
+                    .fg(self.theme.accent)
+                    .add_modifier(Modifier::BOLD),
+            )
             .highlight_symbol(">")
             .highlight_spacing(HighlightSpacing::Always);
 

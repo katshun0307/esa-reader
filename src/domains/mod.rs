@@ -1,7 +1,9 @@
 mod config;
+mod theme;
 
 use chrono::{DateTime, Utc};
 pub use config::*;
+pub use theme::Theme;
 use core::fmt;
 use url::Url;
 
