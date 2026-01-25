@@ -10,6 +10,7 @@ use std::io;
 use futures_util::StreamExt;
 use std::time::Duration;
 use tokio::time::interval;
+use std::process::Command;
 
 pub struct App {
     exit: bool,
@@ -82,11 +83,29 @@ impl App {
             KeyCode::Char('W') => self.post_list.unwatch_selected().await,
             KeyCode::Char('s') => self.post_list.star_selected().await,
             KeyCode::Char('S') => self.post_list.unstar_selected().await,
+            KeyCode::Char('o') => self.open_selected_post_in_browser(),
             _ => {}
         }
     }
 
     fn exit(&mut self) {
         self.exit = true;
+    }
+
+    fn open_selected_post_in_browser(&self) {
+        let Some(selected_post) = self.post_list.selected_post() else {
+            return;
+        };
+        let url = selected_post.url.as_str();
+        #[cfg(target_os = "macos")]
+        let result = Command::new("open").arg(url).status();
+        #[cfg(target_os = "linux")]
+        let result = Command::new("xdg-open").arg(url).status();
+        #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+        let result: Result<std::process::ExitStatus, std::io::Error> =
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "unsupported OS"));
+        if let Err(e) = result {
+            eprintln!("failed to open browser: {}", e);
+        }
     }
 }
