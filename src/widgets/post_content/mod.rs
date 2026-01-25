@@ -1,4 +1,7 @@
-use crate::domains::{POSTS, Post};
+use crate::{
+    domains::{POSTS, Post},
+    http_gateways::EsaClientHttpGateway,
+};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use md_tui::{
     nodes::{root::Component, textcomponent::TextComponent},
@@ -6,19 +9,20 @@ use md_tui::{
 };
 use ratatui::{layout::Rect, prelude::Widget};
 
-#[derive(Clone, Debug)]
 pub struct PostContent {
     pub post: Post,
     pub markdown_content: String,
     pub scroll: u16,
+    pub api: Box<dyn EsaClientHttpGateway>,
 }
 
-impl Default for PostContent {
-    fn default() -> Self {
+impl PostContent {
+    pub fn new(api: Box<dyn EsaClientHttpGateway>) -> Self {
         Self {
             post: POSTS[0].clone(),
             markdown_content: include_str!("../../domains/fixtures/sample_markdown.md").to_string(),
             scroll: 0,
+            api,
         }
     }
 }

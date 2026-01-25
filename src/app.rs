@@ -1,7 +1,6 @@
-use crate::{
-    domains::Config,
-    widgets::{self},
-};
+use crate::domains::WorkspaceConfig;
+use crate::http_gateways::EsaClient;
+use crate::widgets::{self};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
@@ -14,7 +13,6 @@ use ratatui::{
 };
 use std::io;
 
-#[derive(Debug, Default)]
 pub struct App {
     counter: u8,
     exit: bool,
@@ -23,8 +21,18 @@ pub struct App {
 }
 
 impl App {
+    pub fn new(conf: &WorkspaceConfig) -> Self {
+        let api = Box::new(EsaClient::new(&conf.team_name(), &conf.token()));
+        Self {
+            counter: 0,
+            exit: false,
+            post_list: widgets::PostList::new(api.clone()),
+            post_content: widgets::PostContent::new(api),
+        }
+    }
+
     /// runs the application's main loop until the user quits
-    pub fn run(&mut self, terminal: &mut DefaultTerminal, _config: Config) -> io::Result<()> {
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;

@@ -1,7 +1,14 @@
 mod app;
 mod domains;
 mod find_config;
+mod http_gateways;
 mod widgets;
+
+#[cfg(test)]
+extern crate rstest;
+
+#[cfg(test)]
+extern crate insta;
 
 use app::App;
 use find_config::find_config_path;
@@ -11,7 +18,7 @@ use crate::domains::Config;
 
 fn main() -> io::Result<()> {
     let config = get_config().unwrap();
-    ratatui::run(|terminal| App::default().run(terminal, config))
+    ratatui::run(|terminal| App::new(&config.current_workspace().1).run(terminal))
 }
 
 fn get_config() -> anyhow::Result<Config> {

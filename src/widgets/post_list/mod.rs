@@ -6,27 +6,49 @@ use ratatui::{
     widgets::{HighlightSpacing, List, ListItem, ListState, StatefulWidget, Widget},
 };
 
-use crate::domains::{POSTS, Post};
+use crate::{domains::Post, http_gateways::EsaClientHttpGateway};
 
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
 
-#[derive(Clone, Debug)]
 pub struct PostList {
     pub posts: Vec<Post>,
     pub state: ListState,
+    pub api: Box<dyn EsaClientHttpGateway>,
 }
 
-impl Default for PostList {
-    fn default() -> Self {
-        let posts = POSTS.to_owned();
-        Self {
-            posts,
+impl PostList {
+    pub fn new(api: Box<dyn EsaClientHttpGateway>) -> Self {
+        let mut s = Self {
+            posts: vec![],
             state: ListState::default(),
-        }
+            api,
+        };
+        s.init();
+        s
     }
 }
 
 impl PostList {
+    fn init(&mut self) {
+        match self.fetch_posts() {
+            Ok(posts) => {
+                self.posts = posts;
+                if !self.posts.is_empty() {
+                    self.state.select(Some(0));
+                }
+            }
+            Err(e) => {
+                eprintln!("failed to fetch posts: {}", e);
+            }
+        }
+    }
+
+    fn fetch_posts(&self) -> anyhow::Result<Vec<Post>> {
+        let runtime = tokio::runtime::Runtime::new()?;
+        let posts = runtime.block_on(async { self.api.fetch_posts().await })?;
+        Ok(posts)
+    }
+
     pub fn handle_key(&mut self, key: KeyEvent) {
         if key.kind != KeyEventKind::Press {
             return;
