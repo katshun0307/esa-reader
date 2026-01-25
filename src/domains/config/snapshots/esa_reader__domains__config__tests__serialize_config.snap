@@ -1,0 +1,12 @@
+---
+source: src/domains/config/mod.rs
+expression: toml_str
+---
+[workspaces.default]
+team_name = "my_team"
+api_endpoint = "https://api.esa.io"
+token = "my_token"
+
+[workspaces.default.post_views.all]
+title = "All Posts"
+query = "sort:updated"

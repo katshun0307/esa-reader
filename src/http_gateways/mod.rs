@@ -28,16 +28,16 @@ impl EsaClient {
 
 #[async_trait::async_trait]
 pub trait EsaClientHttpGateway: Send + Sync {
-    async fn fetch_posts(&self) -> anyhow::Result<Vec<Post>>;
+    async fn fetch_posts(&self, query: Option<String>) -> anyhow::Result<Vec<Post>>;
     async fn fetch_post_content(&self, post_number: &PostNumber) -> anyhow::Result<String>;
 }
 
 #[async_trait::async_trait]
 impl EsaClientHttpGateway for EsaClient {
-    async fn fetch_posts(&self) -> anyhow::Result<Vec<Post>> {
+    async fn fetch_posts(&self, query: Option<String>) -> anyhow::Result<Vec<Post>> {
         let params = V1TeamsTeamNamePostsGetParams {
             team_name: self.team_name.to_string(),
-            q: Some("sort:updated".to_string()),
+            q: query.or_else(|| Some("sort:updated".to_string())),
             include: None,
             sort: None,
             order: None,

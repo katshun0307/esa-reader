@@ -17,9 +17,10 @@ pub struct App {
 impl App {
     pub fn new(conf: &WorkspaceConfig) -> Self {
         let api = Box::new(EsaClient::new(&conf.team_name(), &conf.token()));
+        let post_views = conf.post_views.values().cloned().collect();
         Self {
             exit: false,
-            post_list: widgets::PostList::new(api.clone()),
+            post_list: widgets::PostList::new(api.clone(), post_views),
             post_content: widgets::PostContent::new(api),
         }
     }

@@ -21,6 +21,14 @@ pub struct WorkspaceConfig {
     #[serde(default = "default_endpoint")]
     api_endpoint: String,
     token: String,
+    pub post_views: BTreeMap<String, PostViewConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct PostViewConfig {
+    pub title: String,
+    pub query: Option<String>,
 }
 
 impl WorkspaceConfig {
@@ -40,4 +48,38 @@ impl WorkspaceConfig {
 
 fn default_endpoint() -> String {
     "https://api.esa.io".to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use insta::assert_snapshot;
+    use rstest::fixture;
+
+    #[fixture]
+    fn config() -> Config {
+        Config {
+            workspaces: BTreeMap::from([(
+                "default".to_string(),
+                WorkspaceConfig {
+                    team_name: "my_team".to_string(),
+                    api_endpoint: "https://api.esa.io".to_string(),
+                    token: "my_token".to_string(),
+                    post_views: BTreeMap::from([(
+                        "all".to_string(),
+                        PostViewConfig {
+                            title: "All Posts".to_string(),
+                            query: Some("sort:updated".to_string()),
+                        },
+                    )]),
+                },
+            )]),
+        }
+    }
+
+    #[rstest::rstest]
+    fn test_serialize_config(config: Config) {
+        let toml_str = toml::to_string(&config).unwrap();
+        assert_snapshot!(toml_str);
+    }
 }
