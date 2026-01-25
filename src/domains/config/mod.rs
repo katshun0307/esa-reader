@@ -28,6 +28,7 @@ impl WorkspaceConfig {
         self.team_name.clone()
     }
 
+    #[allow(dead_code)]
     pub fn api_endpoint(&self) -> String {
         self.api_endpoint.clone()
     }

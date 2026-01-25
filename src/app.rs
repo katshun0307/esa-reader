@@ -4,17 +4,11 @@ use crate::widgets::{self};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
-    buffer::Buffer,
-    layout::{Constraint, Layout, Rect},
-    style::Stylize,
-    symbols::border,
-    text::{Line, Text},
-    widgets::{Block, Paragraph, Widget},
+    layout::{Constraint, Layout},
 };
 use std::io;
 
 pub struct App {
-    counter: u8,
     exit: bool,
     post_list: widgets::PostList,
     post_content: widgets::PostContent,
@@ -24,7 +18,6 @@ impl App {
     pub fn new(conf: &WorkspaceConfig) -> Self {
         let api = Box::new(EsaClient::new(&conf.team_name(), &conf.token()));
         Self {
-            counter: 0,
             exit: false,
             post_list: widgets::PostList::new(api.clone()),
             post_content: widgets::PostContent::new(api),
@@ -65,49 +58,16 @@ impl App {
         self.post_content.handle_key(key_event);
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
-            KeyCode::Left => self.decrement_counter(),
-            KeyCode::Right => self.increment_counter(),
+            KeyCode::Enter => {
+                if let Some(selected_post) = self.post_list.selected_post() {
+                    self.post_content.show_post(selected_post);
+                }
+            }
             _ => {}
         }
     }
 
     fn exit(&mut self) {
         self.exit = true;
-    }
-
-    fn increment_counter(&mut self) {
-        self.counter += 1;
-    }
-
-    fn decrement_counter(&mut self) {
-        self.counter -= 1;
-    }
-}
-
-impl Widget for &App {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Counter App Tutorial ".bold());
-        let instructions = Line::from(vec![
-            " Decrement ".into(),
-            "<Left>".blue().bold(),
-            " Increment ".into(),
-            "<Right>".blue().bold(),
-            " Quit ".into(),
-            "<Q> ".blue().bold(),
-        ]);
-        let block = Block::bordered()
-            .title(title.centered())
-            .title_bottom(instructions.centered())
-            .border_set(border::THICK);
-
-        let counter_text = Text::from(vec![Line::from(vec![
-            "Value: ".into(),
-            self.counter.to_string().yellow(),
-        ])]);
-
-        Paragraph::new(counter_text)
-            .centered()
-            .block(block)
-            .render(area, buf);
     }
 }

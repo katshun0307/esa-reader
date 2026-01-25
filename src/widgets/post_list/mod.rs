@@ -60,6 +60,14 @@ impl PostList {
         }
     }
 
+    pub fn selected_post(&self) -> Option<&Post> {
+        if let Some(selected) = self.state.selected() {
+            self.posts.get(selected)
+        } else {
+            None
+        }
+    }
+
     fn render_list(&mut self, area: Rect, buf: &mut ratatui::buffer::Buffer) {
         let block = ratatui::widgets::Block::default()
             .title("Post List")

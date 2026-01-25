@@ -1,10 +1,9 @@
+use crate::domains::{Post, PostNumber, Tag, User, UserId};
 use chrono::DateTime;
 use esa_api::apis::{
     configuration::Configuration,
     default_api::{self, V1TeamsTeamNamePostsGetParams},
 };
-
-use crate::domains::{Post, Tag, User, UserId};
 
 #[derive(Clone, Debug)]
 pub struct EsaClient {
@@ -58,6 +57,7 @@ impl EsaClientHttpGateway for EsaClient {
 
 fn convert_post(post: esa_api::models::Post) -> anyhow::Result<Post> {
     let esa_api::models::Post {
+        number: Some(post_number),
         name,
         full_name,
         created_at: Some(created_at),
@@ -74,6 +74,7 @@ fn convert_post(post: esa_api::models::Post) -> anyhow::Result<Post> {
         return Err(anyhow::anyhow!("missing required fields in Post"));
     };
 
+    let post_number = PostNumber::from(post_number);
     let name = name.unwrap_or_else(|| "(no title)".to_string());
     let full_name = full_name.unwrap_or_else(|| name.clone());
     let stars = stargazers_count.unwrap_or(0).max(0) as u32;
@@ -90,6 +91,7 @@ fn convert_post(post: esa_api::models::Post) -> anyhow::Result<Post> {
     let url = url.parse()?;
 
     Ok(Post {
+        post_number,
         name,
         full_name,
         stars,

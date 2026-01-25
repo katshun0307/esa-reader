@@ -1,10 +1,8 @@
 mod config;
-mod fixtures;
-
-pub use config::*;
-pub use fixtures::*;
 
 use chrono::{DateTime, Utc};
+pub use config::*;
+use core::fmt;
 use url::Url;
 
 #[derive(Clone, Debug)]
@@ -22,7 +20,23 @@ pub struct Tag {
 }
 
 #[derive(Clone, Debug)]
+pub struct PostNumber(i32);
+
+impl From<i32> for PostNumber {
+    fn from(value: i32) -> Self {
+        PostNumber(value)
+    }
+}
+
+impl fmt::Display for PostNumber {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "#{}", self.0)
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct Post {
+    pub post_number: PostNumber,
     pub name: String,
     pub full_name: String,
     pub stars: u32,

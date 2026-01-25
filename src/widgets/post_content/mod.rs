@@ -1,7 +1,4 @@
-use crate::{
-    domains::{POSTS, Post},
-    http_gateways::EsaClientHttpGateway,
-};
+use crate::{domains::Post, http_gateways::EsaClientHttpGateway};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use md_tui::{
     nodes::{root::Component, textcomponent::TextComponent},
@@ -9,9 +6,13 @@ use md_tui::{
 };
 use ratatui::{layout::Rect, prelude::Widget};
 
-pub struct PostContent {
+pub struct Content {
     pub post: Post,
     pub markdown_content: String,
+}
+
+pub struct PostContent {
+    pub content: Option<Content>,
     pub scroll: u16,
     pub api: Box<dyn EsaClientHttpGateway>,
 }
@@ -19,8 +20,7 @@ pub struct PostContent {
 impl PostContent {
     pub fn new(api: Box<dyn EsaClientHttpGateway>) -> Self {
         Self {
-            post: POSTS[0].clone(),
-            markdown_content: include_str!("../../domains/fixtures/sample_markdown.md").to_string(),
+            content: None,
             scroll: 0,
             api,
         }
@@ -28,6 +28,15 @@ impl PostContent {
 }
 
 impl PostContent {
+    pub fn show_post(&mut self, post: &Post) {
+        let content = Content {
+            post: post.clone(),
+            markdown_content: format!("## Content of post #{}", post.post_number),
+        };
+        self.content = Some(content);
+        self.scroll = 0;
+    }
+
     pub fn handle_key(&mut self, key: KeyEvent) {
         if key.kind != KeyEventKind::Press {
             return;
@@ -40,9 +49,12 @@ impl PostContent {
     }
 
     fn render_paragraph(&self, inner_area: Rect, buf: &mut ratatui::buffer::Buffer, scroll: u16) {
+        let Some(markdown_content) = &self.content.as_ref().map(|c| &c.markdown_content) else {
+            return;
+        };
         let local_area = Rect::new(0, 0, inner_area.width, inner_area.height);
         let mut inner_buf = ratatui::buffer::Buffer::empty(local_area);
-        let component_root = parse_markdown(None, &self.markdown_content, local_area.width);
+        let component_root = parse_markdown(None, markdown_content, local_area.width);
         let mut text_components: Vec<TextComponent> = component_root
             .children()
             .into_iter()
@@ -80,7 +92,10 @@ impl Widget for &mut PostContent {
         block.render(area, buf);
 
         let max_scroll = {
-            let component_root = parse_markdown(None, &self.markdown_content, inner_area.width);
+            let Some(markdown_content) = &self.content.as_ref().map(|c| &c.markdown_content) else {
+                return;
+            };
+            let component_root = parse_markdown(None, markdown_content, inner_area.width);
             let total_height: u16 = component_root
                 .children()
                 .into_iter()
