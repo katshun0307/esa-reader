@@ -64,6 +64,10 @@ impl App {
                     self.post_content.show_post(selected_post).unwrap();
                 }
             }
+            KeyCode::Char('w') => self.post_list.watch_selected(),
+            KeyCode::Char('W') => self.post_list.unwatch_selected(),
+            KeyCode::Char('s') => self.post_list.star_selected(),
+            KeyCode::Char('S') => self.post_list.unstar_selected(),
             _ => {}
         }
     }

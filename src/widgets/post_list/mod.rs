@@ -92,6 +92,78 @@ impl PostList {
         }
     }
 
+    pub fn watch_selected(&mut self) {
+        let Some(post_number) = self.selected_post_number() else {
+            return;
+        };
+        let runtime = match tokio::runtime::Runtime::new() {
+            Ok(runtime) => runtime,
+            Err(e) => {
+                eprintln!("failed to create tokio runtime: {}", e);
+                return;
+            }
+        };
+        if let Err(e) = runtime.block_on(async { self.api.watch_post(&post_number).await }) {
+            eprintln!("failed to watch post: {}", e);
+            return;
+        }
+        self.refresh_posts_keep_selection();
+    }
+
+    pub fn unwatch_selected(&mut self) {
+        let Some(post_number) = self.selected_post_number() else {
+            return;
+        };
+        let runtime = match tokio::runtime::Runtime::new() {
+            Ok(runtime) => runtime,
+            Err(e) => {
+                eprintln!("failed to create tokio runtime: {}", e);
+                return;
+            }
+        };
+        if let Err(e) = runtime.block_on(async { self.api.unwatch_post(&post_number).await }) {
+            eprintln!("failed to unwatch post: {}", e);
+            return;
+        }
+        self.refresh_posts_keep_selection();
+    }
+
+    pub fn star_selected(&mut self) {
+        let Some(post_number) = self.selected_post_number() else {
+            return;
+        };
+        let runtime = match tokio::runtime::Runtime::new() {
+            Ok(runtime) => runtime,
+            Err(e) => {
+                eprintln!("failed to create tokio runtime: {}", e);
+                return;
+            }
+        };
+        if let Err(e) = runtime.block_on(async { self.api.star_post(&post_number).await }) {
+            eprintln!("failed to star post: {}", e);
+            return;
+        }
+        self.refresh_posts_keep_selection();
+    }
+
+    pub fn unstar_selected(&mut self) {
+        let Some(post_number) = self.selected_post_number() else {
+            return;
+        };
+        let runtime = match tokio::runtime::Runtime::new() {
+            Ok(runtime) => runtime,
+            Err(e) => {
+                eprintln!("failed to create tokio runtime: {}", e);
+                return;
+            }
+        };
+        if let Err(e) = runtime.block_on(async { self.api.unstar_post(&post_number).await }) {
+            eprintln!("failed to unstar post: {}", e);
+            return;
+        }
+        self.refresh_posts_keep_selection();
+    }
+
     pub fn selected_post(&self) -> Option<&Post> {
         if let Some(selected) = self.state.selected() {
             self.posts.get(selected)
@@ -118,6 +190,30 @@ impl PostList {
         }
         self.selected_view = (self.selected_view + 1) % self.post_views.len();
         self.refresh_posts();
+    }
+
+    fn selected_post_number(&self) -> Option<crate::domains::PostNumber> {
+        let selected = self.state.selected()?;
+        let post = self.posts.get(selected)?;
+        Some(crate::domains::PostNumber::from(post.post_number.to_i32()))
+    }
+
+    fn refresh_posts_keep_selection(&mut self) {
+        let selected = self.state.selected();
+        match self.fetch_posts() {
+            Ok(posts) => {
+                self.posts = posts;
+                if self.posts.is_empty() {
+                    self.state.select(None);
+                } else {
+                    let idx = selected.unwrap_or(0).min(self.posts.len().saturating_sub(1));
+                    self.state.select(Some(idx));
+                }
+            }
+            Err(e) => {
+                eprintln!("failed to fetch posts: {}", e);
+            }
+        }
     }
 
     fn render_tabs(&self, area: Rect, buf: &mut Buffer) {

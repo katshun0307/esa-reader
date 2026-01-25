@@ -2,7 +2,13 @@ use crate::domains::{Post, PostNumber, Tag, User, UserId};
 use chrono::DateTime;
 use esa_api::apis::{
     configuration::Configuration,
-    default_api::{self, V1TeamsTeamNamePostsGetParams},
+    default_api::{
+        self, V1TeamsTeamNamePostsGetParams,
+        V1TeamsTeamNamePostsPostNumberStarDeleteParams,
+        V1TeamsTeamNamePostsPostNumberStarPostParams,
+        V1TeamsTeamNamePostsPostNumberWatchDeleteParams,
+        V1TeamsTeamNamePostsPostNumberWatchPostParams,
+    },
 };
 
 #[derive(Clone, Debug)]
@@ -30,6 +36,10 @@ impl EsaClient {
 pub trait EsaClientHttpGateway: Send + Sync {
     async fn fetch_posts(&self, query: Option<String>) -> anyhow::Result<Vec<Post>>;
     async fn fetch_post_content(&self, post_number: &PostNumber) -> anyhow::Result<String>;
+    async fn watch_post(&self, post_number: &PostNumber) -> anyhow::Result<()>;
+    async fn unwatch_post(&self, post_number: &PostNumber) -> anyhow::Result<()>;
+    async fn star_post(&self, post_number: &PostNumber) -> anyhow::Result<()>;
+    async fn unstar_post(&self, post_number: &PostNumber) -> anyhow::Result<()>;
 }
 
 #[async_trait::async_trait]
@@ -70,6 +80,47 @@ impl EsaClientHttpGateway for EsaClient {
             .body_md
             .ok_or_else(|| anyhow::anyhow!("missing body_md in post"))?;
         Ok(content)
+    }
+
+    async fn watch_post(&self, post_number: &PostNumber) -> anyhow::Result<()> {
+        let params = V1TeamsTeamNamePostsPostNumberWatchPostParams {
+            team_name: self.team_name.to_string(),
+            post_number: post_number.to_i32(),
+        };
+
+        default_api::v1_teams_team_name_posts_post_number_watch_post(&self.conf, params).await?;
+        Ok(())
+    }
+
+    async fn unwatch_post(&self, post_number: &PostNumber) -> anyhow::Result<()> {
+        let params = V1TeamsTeamNamePostsPostNumberWatchDeleteParams {
+            team_name: self.team_name.to_string(),
+            post_number: post_number.to_i32(),
+        };
+
+        default_api::v1_teams_team_name_posts_post_number_watch_delete(&self.conf, params).await?;
+        Ok(())
+    }
+
+    async fn star_post(&self, post_number: &PostNumber) -> anyhow::Result<()> {
+        let params = V1TeamsTeamNamePostsPostNumberStarPostParams {
+            team_name: self.team_name.to_string(),
+            post_number: post_number.to_i32(),
+            inline_object: None,
+        };
+
+        default_api::v1_teams_team_name_posts_post_number_star_post(&self.conf, params).await?;
+        Ok(())
+    }
+
+    async fn unstar_post(&self, post_number: &PostNumber) -> anyhow::Result<()> {
+        let params = V1TeamsTeamNamePostsPostNumberStarDeleteParams {
+            team_name: self.team_name.to_string(),
+            post_number: post_number.to_i32(),
+        };
+
+        default_api::v1_teams_team_name_posts_post_number_star_delete(&self.conf, params).await?;
+        Ok(())
     }
 }
 
