@@ -239,8 +239,25 @@ impl PostList {
             .posts
             .iter()
             .map(|post| {
-                let content = format!("{} (⭐ {})", post.name, post.stars);
-                ListItem::new(content)
+                let tags = post
+                    .tags
+                    .iter()
+                    .map(|tag| tag.label.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                let header = if tags.is_empty() {
+                    format!("{} {}", post.post_number, post.full_name)
+                } else {
+                    format!("{} {} {}", post.post_number, post.full_name, tags)
+                };
+                let updated_at = post.updated_at.format("%Y-%m-%d %H:%M").to_string();
+                let meta = format!("@{}  {}", post.updated_by.id.0, updated_at);
+                let stats = format!("☆ {} 👁️ {}", post.stars, post.watches);
+                ListItem::new(vec![
+                    Line::from(header),
+                    Line::from(meta),
+                    Line::from(stats),
+                ])
             })
             .collect();
 
