@@ -26,6 +26,33 @@ impl Theme {
             link: parse_or_default(config.link.as_deref(), defaults.link.as_deref()),
         }
     }
+
+    pub fn apply_to_md_tui(&self) {
+        use md_tui::util::colors::{color_config, heading_colors, set_color_config, set_heading_colors};
+
+        let mut config = color_config();
+        // Map minimal theme colors while preserving md-tui defaults for the rest.
+        config.heading_fg_color = self.primary;
+        config.bold_color = self.primary;
+        config.bold_italic_color = self.primary;
+        config.italic_color = self.muted;
+        config.code_fg_color = self.accent;
+        config.link_color = self.link;
+        config.link_selected_fg_color = self.link;
+        config.table_header_fg_color = self.accent;
+        config.quote_important = self.error;
+        config.quote_warning = self.warning;
+        config.quote_tip = self.success;
+        set_color_config(config);
+
+        let mut headings = heading_colors();
+        headings.level_2 = self.primary;
+        headings.level_3 = self.accent;
+        headings.level_4 = self.accent;
+        headings.level_5 = self.muted;
+        headings.level_6 = self.muted;
+        set_heading_colors(headings);
+    }
 }
 
 fn parse_or_default(value: Option<&str>, fallback: Option<&str>) -> Color {

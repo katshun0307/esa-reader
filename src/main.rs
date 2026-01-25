@@ -28,6 +28,7 @@ async fn main() -> io::Result<()> {
     let (workspace_name, workspace) = config.current_workspace();
     let theme_config = config.get_theme(&workspace_name);
     let theme = Theme::from_config(&theme_config);
+    theme.apply_to_md_tui();
     let mut terminal = init_terminal()?;
     let res = App::new(&workspace, theme).run(&mut terminal).await;
     let restore_res = restore_terminal(&mut terminal);

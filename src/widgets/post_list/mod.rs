@@ -179,7 +179,9 @@ impl PostList {
                 if self.posts.is_empty() {
                     self.state.select(None);
                 } else {
-                    let idx = selected.unwrap_or(0).min(self.posts.len().saturating_sub(1));
+                    let idx = selected
+                        .unwrap_or(0)
+                        .min(self.posts.len().saturating_sub(1));
                     self.state.select(Some(idx));
                 }
             }
@@ -239,13 +241,10 @@ impl PostList {
                     format!("{} {} {}", post.post_number, post.full_name, tags)
                 };
                 let updated_at = post.updated_at.format("%Y-%m-%d %H:%M").to_string();
-                let meta = format!("@{}  {}", post.updated_by.id.0, updated_at);
-                let stats = format!("☆ {} 👁️ {}", post.stars, post.watches);
+                let meta = format!("\u{f007} @{}  {}", post.updated_by.id.0, updated_at);
+                let stats = format!("\u{f41e} {} \u{f441} {}", post.stars, post.watches);
                 ListItem::new(vec![
-                    Line::from(Span::styled(
-                        header,
-                        Style::new().fg(self.theme.primary),
-                    )),
+                    Line::from(Span::styled(header, Style::new().fg(self.theme.primary))),
                     Line::from(Span::styled(meta, Style::new().fg(self.theme.muted))),
                     Line::from(Span::styled(stats, Style::new().fg(self.theme.muted))),
                 ])
