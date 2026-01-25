@@ -28,6 +28,12 @@ impl From<i32> for PostNumber {
     }
 }
 
+impl PostNumber {
+    pub fn to_i32(&self) -> i32 {
+        self.0
+    }
+}
+
 impl fmt::Display for PostNumber {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "#{}", self.0)

@@ -28,13 +28,24 @@ impl PostContent {
 }
 
 impl PostContent {
-    pub fn show_post(&mut self, post: &Post) {
+    pub fn show_post(&mut self, post: &Post) -> anyhow::Result<()> {
+        let runtime = tokio::runtime::Runtime::new()?;
+        let markdown_content = runtime.block_on(async {
+            self.api
+                .fetch_post_content(&post.post_number)
+                .await
+                .unwrap_or_else(|e| {
+                    eprintln!("failed to fetch post content: {}", e);
+                    String::from("# Error\nFailed to load content.")
+                })
+        });
         let content = Content {
             post: post.clone(),
-            markdown_content: format!("## Content of post #{}", post.post_number),
+            markdown_content,
         };
         self.content = Some(content);
         self.scroll = 0;
+        Ok(())
     }
 
     pub fn handle_key(&mut self, key: KeyEvent) {

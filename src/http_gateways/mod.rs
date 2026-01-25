@@ -29,6 +29,7 @@ impl EsaClient {
 #[async_trait::async_trait]
 pub trait EsaClientHttpGateway: Send + Sync {
     async fn fetch_posts(&self) -> anyhow::Result<Vec<Post>>;
+    async fn fetch_post_content(&self, post_number: &PostNumber) -> anyhow::Result<String>;
 }
 
 #[async_trait::async_trait]
@@ -52,6 +53,23 @@ impl EsaClientHttpGateway for EsaClient {
             }
         }
         Ok(posts)
+    }
+
+    async fn fetch_post_content(&self, post_number: &PostNumber) -> anyhow::Result<String> {
+        let params = esa_api::apis::default_api::V1TeamsTeamNamePostsPostNumberGetParams {
+            team_name: self.team_name.to_string(),
+            post_number: post_number.to_i32(),
+            include: None,
+        };
+
+        let response = esa_api::apis::default_api::v1_teams_team_name_posts_post_number_get(
+            &self.conf, params,
+        )
+        .await?;
+        let content = response
+            .body_md
+            .ok_or_else(|| anyhow::anyhow!("missing body_md in post"))?;
+        Ok(content)
     }
 }
 

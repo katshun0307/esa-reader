@@ -60,7 +60,7 @@ impl App {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Enter => {
                 if let Some(selected_post) = self.post_list.selected_post() {
-                    self.post_content.show_post(selected_post);
+                    self.post_content.show_post(selected_post).unwrap();
                 }
             }
             _ => {}
