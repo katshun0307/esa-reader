@@ -51,6 +51,7 @@ impl EsaClientHttpGateway for EsaClient {
             include: None,
             sort: None,
             order: None,
+            page: Some(1),
         };
 
         let response = default_api::v1_teams_team_name_posts_get(&self.conf, params).await?;

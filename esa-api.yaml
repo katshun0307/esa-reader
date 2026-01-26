@@ -195,6 +195,11 @@ paths:
           description: Include related resources (comments, comments.stargazers, stargazers).
           schema:
             type: string
+        - name: page
+          in: query
+          description: 取得するページ
+          schema:
+            type: integer
         - name: sort
           in: query
           description: Sort key.

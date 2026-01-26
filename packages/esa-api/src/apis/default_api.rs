@@ -22,6 +22,8 @@ pub struct V1TeamsTeamNamePostsGetParams {
     pub q: Option<String>,
     /// Include related resources (comments, comments.stargazers, stargazers).
     pub include: Option<String>,
+    /// 取得するページ
+    pub page: Option<i32>,
     /// Sort key.
     pub sort: Option<String>,
     /// Sort order.
@@ -130,6 +132,7 @@ pub async fn v1_teams_team_name_posts_get(configuration: &configuration::Configu
     let team_name = params.team_name;
     let q = params.q;
     let include = params.include;
+    let page = params.page;
     let sort = params.sort;
     let order = params.order;
 
@@ -144,6 +147,9 @@ pub async fn v1_teams_team_name_posts_get(configuration: &configuration::Configu
     }
     if let Some(ref local_var_str) = include {
         local_var_req_builder = local_var_req_builder.query(&[("include", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = page {
+        local_var_req_builder = local_var_req_builder.query(&[("page", &local_var_str.to_string())]);
     }
     if let Some(ref local_var_str) = sort {
         local_var_req_builder = local_var_req_builder.query(&[("sort", &local_var_str.to_string())]);

@@ -16,7 +16,7 @@ Method | HTTP request | Description
 
 ## v1_teams_team_name_posts_get
 
-> crate::models::PostListResponse v1_teams_team_name_posts_get(team_name, q, include, sort, order)
+> crate::models::PostListResponse v1_teams_team_name_posts_get(team_name, q, include, page, sort, order)
 List posts in a team
 
 Returns a list of posts.
@@ -29,6 +29,7 @@ Name | Type | Description  | Required | Notes
 **team_name** | **String** |  | [required] |
 **q** | Option<**String**> | Filter condition for posts. |  |
 **include** | Option<**String**> | Include related resources (comments, comments.stargazers, stargazers). |  |
+**page** | Option<**i32**> | 取得するページ |  |
 **sort** | Option<**String**> | Sort key. |  |[default to updated]
 **order** | Option<**String**> | Sort order. |  |[default to desc]
 
