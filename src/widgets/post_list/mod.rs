@@ -14,6 +14,11 @@ use crate::{
     http_gateways::EsaClientHttpGateway,
 };
 
+const STAR_ICON: &str = "\u{f005}";
+const UNSTAR_ICON: &str = "\u{f41e}";
+const WATCH_ICON: &str = "\u{f06e}";
+const UNWATCH_ICON: &str = "\u{f441}";
+
 pub struct PostList {
     pub posts: Vec<Post>,
     pub state: ListState,
@@ -242,7 +247,9 @@ impl PostList {
                 };
                 let updated_at = post.updated_at.format("%Y-%m-%d %H:%M").to_string();
                 let meta = format!("\u{f007} @{}  {}", post.updated_by.id.0, updated_at);
-                let stats = format!("\u{f41e} {} \u{f441} {}", post.stars, post.watches);
+                let star_icon = if post.starred { STAR_ICON } else { UNSTAR_ICON };
+                let watch_icon = if post.watched { WATCH_ICON } else { UNWATCH_ICON };
+                let stats = format!("{} {} {} {}", star_icon, post.stars, watch_icon, post.watches);
                 ListItem::new(vec![
                     Line::from(Span::styled(header, Style::new().fg(self.theme.primary))),
                     Line::from(Span::styled(meta, Style::new().fg(self.theme.muted))),
