@@ -17,6 +17,12 @@ pub struct EsaClient {
     conf: Configuration,
 }
 
+#[derive(Clone, Debug)]
+pub struct PostListPage {
+    pub posts: Vec<Post>,
+    pub next_page: Option<i32>,
+}
+
 impl EsaClient {
     pub fn new(team_name: &str, api_token: &str) -> Self {
         let mut conf = Configuration::new();
@@ -34,7 +40,12 @@ impl EsaClient {
 
 #[async_trait::async_trait]
 pub trait EsaClientHttpGateway: Send + Sync {
-    async fn fetch_posts(&self, query: Option<String>) -> anyhow::Result<Vec<Post>>;
+    async fn fetch_posts(
+        &self,
+        query: Option<String>,
+        page: i32,
+    ) -> anyhow::Result<PostListPage>;
+    async fn fetch_post(&self, post_number: &PostNumber) -> Option<Post>;
     async fn fetch_post_content(&self, post_number: &PostNumber) -> anyhow::Result<String>;
     async fn watch_post(&self, post_number: &PostNumber) -> anyhow::Result<()>;
     async fn unwatch_post(&self, post_number: &PostNumber) -> anyhow::Result<()>;
@@ -44,14 +55,18 @@ pub trait EsaClientHttpGateway: Send + Sync {
 
 #[async_trait::async_trait]
 impl EsaClientHttpGateway for EsaClient {
-    async fn fetch_posts(&self, query: Option<String>) -> anyhow::Result<Vec<Post>> {
+    async fn fetch_posts(
+        &self,
+        query: Option<String>,
+        page: i32,
+    ) -> anyhow::Result<PostListPage> {
         let params = V1TeamsTeamNamePostsGetParams {
             team_name: self.team_name.to_string(),
             q: query.or_else(|| Some("sort:updated".to_string())),
             include: None,
             sort: None,
             order: None,
-            page: Some(1),
+            page: Some(page),
         };
 
         let response = default_api::v1_teams_team_name_posts_get(&self.conf, params).await?;
@@ -63,7 +78,25 @@ impl EsaClientHttpGateway for EsaClient {
                 Err(e) => eprintln!("failed to convert post: {}", e),
             }
         }
-        Ok(posts)
+        Ok(PostListPage {
+            posts,
+            next_page: response.next_page,
+        })
+    }
+
+    async fn fetch_post(&self, post_number: &PostNumber) -> Option<Post> {
+        let params = esa_api::apis::default_api::V1TeamsTeamNamePostsPostNumberGetParams {
+            team_name: self.team_name.to_string(),
+            post_number: post_number.to_i32(),
+            include: None,
+        };
+
+        let response = esa_api::apis::default_api::v1_teams_team_name_posts_post_number_get(
+            &self.conf, params,
+        )
+        .await
+        .ok()?;
+        convert_post(response).ok()
     }
 
     async fn fetch_post_content(&self, post_number: &PostNumber) -> anyhow::Result<String> {

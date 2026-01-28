@@ -39,10 +39,10 @@ fn candidate_config_paths(app_name: &str, file_name: &str) -> anyhow::Result<Vec
     // 0) 明示指定があれば最優先（例: ESA_TUI_CONFIG=/path/to/config.toml）
     // アプリ名に応じて env var 名を変えてもOK
     let env_key = format!("{}_CONFIG", to_env_key(app_name));
-    if let Ok(p) = env::var(&env_key) {
-        if !p.trim().is_empty() {
-            v.push(PathBuf::from(p));
-        }
+    if let Ok(p) = env::var(&env_key)
+        && !p.trim().is_empty()
+    {
+        v.push(PathBuf::from(p));
     }
 
     // 1) XDG_CONFIG_HOME（Linux で一般的、mac でも使う人がいる）

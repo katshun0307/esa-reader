@@ -56,10 +56,10 @@ impl App {
     ) -> io::Result<()> {
         tokio::select! {
             maybe_event = events.next() => {
-                if let Some(Ok(Event::Key(key_event))) = maybe_event {
-                    if key_event.kind == KeyEventKind::Press {
-                        self.handle_key_event(key_event).await;
-                    }
+                if let Some(Ok(Event::Key(key_event))) = maybe_event
+                    && key_event.kind == KeyEventKind::Press
+                {
+                    self.handle_key_event(key_event).await;
                 }
             }
             _ = tick.tick() => {}
@@ -73,10 +73,10 @@ impl App {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Enter => {
-                if let Some(selected_post) = self.post_list.selected_post() {
-                    if let Err(e) = self.post_content.show_post(selected_post).await {
-                        eprintln!("failed to show post: {}", e);
-                    }
+                if let Some(selected_post) = self.post_list.selected_post()
+                    && let Err(e) = self.post_content.show_post(selected_post).await
+                {
+                    eprintln!("failed to show post: {}", e);
                 }
             }
             KeyCode::Char('w') => self.post_list.watch_selected().await,
