@@ -16,17 +16,15 @@ impl Config {
     }
 
     pub fn get_theme(&self, workspace_name: &str) -> ThemeConfig {
-        if let Some(workspace) = self.workspaces.get(workspace_name) {
-            if let Some(theme_name) = &workspace.theme {
-                if let Some(theme) = self.themes.get(theme_name) {
-                    return theme.clone();
-                } else {
-                    if theme_name == "dark" {
-                        return THEME_CONFIG_DARK.clone();
-                    } else if theme_name == "light" {
-                        return THEME_CONFIG_LIGHT.clone();
-                    }
-                }
+        if let Some(workspace) = self.workspaces.get(workspace_name)
+            && let Some(theme_name) = &workspace.theme
+        {
+            if let Some(theme) = self.themes.get(theme_name) {
+                return theme.clone();
+            } else if theme_name == "dark" {
+                return THEME_CONFIG_DARK.clone();
+            } else if theme_name == "light" {
+                return THEME_CONFIG_LIGHT.clone();
             }
         }
         ThemeConfig::default()

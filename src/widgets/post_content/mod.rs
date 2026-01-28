@@ -54,18 +54,15 @@ impl PostContent {
         if key.kind != KeyEventKind::Press {
             return;
         }
-        match key.code {
-            KeyCode::Char(' ') => {
-                if self.view_height == 0 {
-                    return;
-                }
-                if key.modifiers.contains(KeyModifiers::SHIFT) {
-                    self.scroll = self.scroll.saturating_sub(self.view_height);
-                } else {
-                    self.scroll = self.scroll.saturating_add(self.view_height);
-                }
+        if let KeyCode::Char(' ') = key.code {
+            if self.view_height == 0 {
+                return;
             }
-            _ => {}
+            if key.modifiers.contains(KeyModifiers::SHIFT) {
+                self.scroll = self.scroll.saturating_sub(self.view_height);
+            } else {
+                self.scroll = self.scroll.saturating_add(self.view_height);
+            }
         }
     }
 
@@ -86,7 +83,7 @@ impl PostContent {
             .collect();
         let mut y_offset = 0;
         for mut comp in text_components.drain(..) {
-            let height = comp.height() as u16;
+            let height = comp.height();
             comp.set_y_offset(y_offset);
             comp.set_scroll_offset(scroll);
             comp.render(local_area, &mut inner_buf);
@@ -94,10 +91,10 @@ impl PostContent {
         }
         for y in 0..inner_area.height {
             for x in 0..inner_area.width {
-                if let Some(cell) = inner_buf.cell((x, y)).cloned() {
-                    if let Some(dst) = buf.cell_mut((inner_area.x + x, inner_area.y + y)) {
-                        *dst = cell;
-                    }
+                if let Some(cell) = inner_buf.cell((x, y)).cloned()
+                    && let Some(dst) = buf.cell_mut((inner_area.x + x, inner_area.y + y))
+                {
+                    *dst = cell;
                 }
             }
         }
@@ -124,7 +121,7 @@ impl Widget for &mut PostContent {
                 .children()
                 .into_iter()
                 .filter_map(|c| match c {
-                    Component::TextComponent(t) => Some(t.height() as u16),
+                    Component::TextComponent(t) => Some(t.height()),
                     _ => None,
                 })
                 .sum();

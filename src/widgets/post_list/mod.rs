@@ -11,7 +11,7 @@ use ratatui::{
 
 use crate::{
     domains::{Post, PostViewConfig, Theme},
-    http_gateways::EsaClientHttpGateway,
+    http_gateways::{EsaClientHttpGateway, PostListPage},
 };
 
 const STAR_ICON: &str = "\u{f005}";
@@ -24,6 +24,8 @@ pub struct PostList {
     pub state: ListState,
     post_views: Vec<PostViewConfig>,
     selected_view: usize,
+    current_page: i32,
+    next_page: Option<i32>,
     pub api: Box<dyn EsaClientHttpGateway>,
     theme: Theme,
 }
@@ -39,6 +41,8 @@ impl PostList {
             state: ListState::default(),
             post_views,
             selected_view: 0,
+            current_page: 1,
+            next_page: None,
             api,
             theme,
         }
@@ -47,12 +51,12 @@ impl PostList {
 
 impl PostList {
     pub async fn init(&mut self) {
-        match self.fetch_posts().await {
-            Ok(posts) => {
+        match self.fetch_posts_page(1).await {
+            Ok(PostListPage { posts, next_page }) => {
                 self.posts = posts;
-                if !self.posts.is_empty() {
-                    self.state.select(Some(0));
-                }
+                self.current_page = 1;
+                self.next_page = next_page;
+                self.reset_selection();
             }
             Err(e) => {
                 eprintln!("failed to fetch posts: {}", e);
@@ -60,24 +64,22 @@ impl PostList {
         }
     }
 
-    async fn fetch_posts(&self) -> anyhow::Result<Vec<Post>> {
+    async fn fetch_posts_page(&self, page: i32) -> anyhow::Result<PostListPage> {
         let query = self
             .post_views
             .get(self.selected_view)
             .and_then(|view| view.query.clone());
-        let posts = self.api.fetch_posts(query).await?;
-        Ok(posts)
+        let response = self.api.fetch_posts(query, page).await?;
+        Ok(response)
     }
 
     async fn refresh_posts(&mut self) {
-        match self.fetch_posts().await {
-            Ok(posts) => {
+        match self.fetch_posts_page(1).await {
+            Ok(PostListPage { posts, next_page }) => {
                 self.posts = posts;
-                if self.posts.is_empty() {
-                    self.state.select(None);
-                } else {
-                    self.state.select(Some(0));
-                }
+                self.current_page = 1;
+                self.next_page = next_page;
+                self.reset_selection();
             }
             Err(e) => {
                 eprintln!("failed to fetch posts: {}", e);
@@ -94,11 +96,15 @@ impl PostList {
             KeyCode::Char('k') | KeyCode::Up => self.state.select_previous(),
             KeyCode::Char('h') | KeyCode::Left => self.select_prev_view().await,
             KeyCode::Char('l') | KeyCode::Right => self.select_next_view().await,
+            KeyCode::Enter => self.load_more_if_needed().await,
             _ => {}
         }
     }
 
     pub async fn watch_selected(&mut self) {
+        if self.is_load_more_selected() {
+            return;
+        }
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
@@ -106,10 +112,13 @@ impl PostList {
             eprintln!("failed to watch post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection().await;
+        self.refresh_selected_post().await;
     }
 
     pub async fn unwatch_selected(&mut self) {
+        if self.is_load_more_selected() {
+            return;
+        }
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
@@ -117,10 +126,13 @@ impl PostList {
             eprintln!("failed to unwatch post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection().await;
+        self.refresh_selected_post().await;
     }
 
     pub async fn star_selected(&mut self) {
+        if self.is_load_more_selected() {
+            return;
+        }
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
@@ -128,10 +140,13 @@ impl PostList {
             eprintln!("failed to star post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection().await;
+        self.refresh_selected_post().await;
     }
 
     pub async fn unstar_selected(&mut self) {
+        if self.is_load_more_selected() {
+            return;
+        }
         let Some(post_number) = self.selected_post_number() else {
             return;
         };
@@ -139,11 +154,14 @@ impl PostList {
             eprintln!("failed to unstar post: {}", e);
             return;
         }
-        self.refresh_posts_keep_selection().await;
+        self.refresh_selected_post().await;
     }
 
     pub fn selected_post(&self) -> Option<&Post> {
         if let Some(selected) = self.state.selected() {
+            if self.is_load_more_index(selected) {
+                return None;
+            }
             self.posts.get(selected)
         } else {
             None
@@ -172,28 +190,88 @@ impl PostList {
 
     fn selected_post_number(&self) -> Option<crate::domains::PostNumber> {
         let selected = self.state.selected()?;
+        if self.is_load_more_index(selected) {
+            return None;
+        }
         let post = self.posts.get(selected)?;
         Some(crate::domains::PostNumber::from(post.post_number.to_i32()))
     }
 
-    async fn refresh_posts_keep_selection(&mut self) {
+    async fn refresh_selected_post(&mut self) {
+        if self.is_load_more_selected() {
+            return;
+        }
+        let Some(selected) = self.state.selected() else {
+            return;
+        };
+        let Some(post_number) = self.selected_post_number() else {
+            return;
+        };
+        match self.api.fetch_post(&post_number).await {
+            Some(post) => {
+                if let Some(target) = self.posts.get_mut(selected) {
+                    *target = post;
+                }
+            }
+            None => {
+                eprintln!("failed to fetch post: {}", post_number);
+            }
+        }
+    }
+
+    async fn load_more_if_needed(&mut self) {
+        if !self.is_load_more_selected() {
+            return;
+        }
+        let Some(next_page) = self.next_page else {
+            return;
+        };
+        let requested_page = next_page;
         let selected = self.state.selected();
-        match self.fetch_posts().await {
-            Ok(posts) => {
-                self.posts = posts;
-                if self.posts.is_empty() {
-                    self.state.select(None);
-                } else {
-                    let idx = selected
-                        .unwrap_or(0)
-                        .min(self.posts.len().saturating_sub(1));
-                    self.state.select(Some(idx));
+        match self.fetch_posts_page(requested_page).await {
+            Ok(PostListPage { posts, next_page }) => {
+                let previous_len = self.posts.len();
+                self.posts.extend(posts);
+                self.current_page = requested_page;
+                self.next_page = next_page;
+                if let Some(selected) = selected
+                    && selected == previous_len
+                {
+                    if previous_len < self.posts.len() {
+                        self.state.select(Some(previous_len));
+                    } else if self.posts.is_empty() {
+                        self.state.select(None);
+                    } else {
+                        self.state.select(Some(self.posts.len().saturating_sub(1)));
+                    }
                 }
             }
             Err(e) => {
                 eprintln!("failed to fetch posts: {}", e);
             }
         }
+    }
+
+    fn reset_selection(&mut self) {
+        if self.posts.is_empty() && !self.has_more() {
+            self.state.select(None);
+        } else {
+            self.state.select(Some(0));
+        }
+    }
+
+    fn has_more(&self) -> bool {
+        self.next_page.is_some()
+    }
+
+    fn is_load_more_selected(&self) -> bool {
+        self.state
+            .selected()
+            .is_some_and(|selected| self.is_load_more_index(selected))
+    }
+
+    fn is_load_more_index(&self, index: usize) -> bool {
+        self.has_more() && index == self.posts.len()
     }
 
     fn render_tabs(&self, area: Rect, buf: &mut Buffer) {
@@ -263,7 +341,17 @@ impl PostList {
                     Line::from(Span::styled(stats, Style::new().fg(self.theme.muted))),
                 ])
             })
-            .collect();
+            .collect::<Vec<_>>();
+
+        let mut items = items;
+        if self.has_more() {
+            items.push(ListItem::new(vec![Line::from(Span::styled(
+                "続きをロード",
+                Style::new()
+                    .fg(self.theme.accent)
+                    .add_modifier(Modifier::BOLD),
+            ))]));
+        }
 
         let list = List::new(items)
             .block(block)
