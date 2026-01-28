@@ -70,6 +70,11 @@ link = "#2563EB"
 cargo run
 ```
 
+## フォント
+
+[Nerdfont](https://www.nerdfonts.com/) 対応のフォント利用を想定しています.
+例: [miiton/Cica: プログラミング用日本語等幅フォント Cica(シカ)](https://github.com/miiton/Cica)
+
 ### キーバインド
 - `j` / `↓`: 下へ移動（一覧選択）
 - `k` / `↑`: 上へ移動（一覧選択）
