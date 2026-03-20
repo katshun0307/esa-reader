@@ -11,8 +11,16 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn current_workspace(&self) -> (String, WorkspaceConfig) {
-        self.workspaces.clone().into_iter().nth(0).unwrap()
+    pub fn workspace_names(&self) -> Vec<String> {
+        self.workspaces.keys().cloned().collect()
+    }
+
+    pub fn first_workspace_name(&self) -> String {
+        self.workspaces.keys().next().unwrap().clone()
+    }
+
+    pub fn workspace(&self, name: &str) -> &WorkspaceConfig {
+        self.workspaces.get(name).unwrap()
     }
 
     pub fn get_theme(&self, workspace_name: &str) -> ThemeConfig {
