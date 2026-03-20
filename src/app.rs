@@ -14,7 +14,9 @@ use std::process::Command;
 
 pub struct App {
     exit: bool,
+    #[allow(dead_code)]
     config: Config,
+    #[allow(dead_code)]
     selected_workspace: String,
     post_list: widgets::PostList,
     post_content: widgets::PostContent,
@@ -38,6 +40,7 @@ impl App {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn switch_workspace(&mut self, name: &str) {
         if name == self.selected_workspace || !self.config.workspace_names().contains(&name.to_string()) {
             return;

@@ -11,6 +11,7 @@ pub struct Config {
 }
 
 impl Config {
+    #[allow(dead_code)]
     pub fn workspace_names(&self) -> Vec<String> {
         self.workspaces.keys().cloned().collect()
     }
