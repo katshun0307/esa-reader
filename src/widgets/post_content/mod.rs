@@ -1,4 +1,7 @@
-use crate::{domains::{Post, Theme}, http_gateways::EsaClientHttpGateway};
+use crate::{
+    domains::{Post, Theme},
+    http_gateways::EsaClientHttpGateway,
+};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use md_tui::{
     nodes::{root::Component, textcomponent::TextComponent},

@@ -1,32 +1,62 @@
-use crate::domains::{Theme, WorkspaceConfig};
+use crate::domains::{Config, Theme};
 use crate::http_gateways::EsaClient;
 use crate::widgets::{self};
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind};
+use futures_util::StreamExt;
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Layout},
 };
 use std::io;
-use futures_util::StreamExt;
+use std::process::Command;
 use std::time::Duration;
 use tokio::time::interval;
-use std::process::Command;
 
 pub struct App {
     exit: bool,
+    #[allow(dead_code)]
+    config: Config,
+    #[allow(dead_code)]
+    selected_workspace: String,
     post_list: widgets::PostList,
     post_content: widgets::PostContent,
 }
 
 impl App {
-    pub fn new(conf: &WorkspaceConfig, theme: Theme) -> Self {
-        let api = Box::new(EsaClient::new(&conf.team_name(), &conf.token()));
-        let post_views = conf.post_views.values().cloned().collect();
+    pub fn new(config: Config) -> Self {
+        let selected_workspace = config.first_workspace_name();
+        let workspace = config.workspace(&selected_workspace);
+        let theme_config = config.get_theme(&selected_workspace);
+        let theme = Theme::from_config(&theme_config);
+        theme.apply_to_md_tui();
+        let api = Box::new(EsaClient::new(&workspace.team_name(), &workspace.token()));
+        let post_views = workspace.post_views.values().cloned().collect();
         Self {
             exit: false,
+            config,
+            selected_workspace,
             post_list: widgets::PostList::new(api.clone(), post_views, theme.clone()),
             post_content: widgets::PostContent::new(api, theme),
         }
+    }
+
+    #[allow(dead_code)]
+    pub async fn switch_workspace(&mut self, name: &str) {
+        if name == self.selected_workspace
+            || !self.config.workspace_names().contains(&name.to_string())
+        {
+            return;
+        }
+        self.selected_workspace = name.to_string();
+        let workspace = self.config.workspace(name);
+        let theme_config = self.config.get_theme(name);
+        let theme = Theme::from_config(&theme_config);
+        theme.apply_to_md_tui();
+        let api = Box::new(EsaClient::new(&workspace.team_name(), &workspace.token()));
+        let post_views = workspace.post_views.values().cloned().collect();
+        self.post_list = widgets::PostList::new(api.clone(), post_views, theme.clone());
+        self.post_content = widgets::PostContent::new(api, theme);
+        self.post_list.init().await;
     }
 
     /// runs the application's main loop until the user quits
@@ -102,8 +132,10 @@ impl App {
         #[cfg(target_os = "linux")]
         let result = Command::new("xdg-open").arg(url).status();
         #[cfg(not(any(target_os = "macos", target_os = "linux")))]
-        let result: Result<std::process::ExitStatus, std::io::Error> =
-            Err(std::io::Error::new(std::io::ErrorKind::Other, "unsupported OS"));
+        let result: Result<std::process::ExitStatus, std::io::Error> = Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "unsupported OS",
+        ));
         if let Err(e) = result {
             eprintln!("failed to open browser: {}", e);
         }

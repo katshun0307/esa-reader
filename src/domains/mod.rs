@@ -3,8 +3,8 @@ mod theme;
 
 use chrono::{DateTime, Utc};
 pub use config::*;
-pub use theme::Theme;
 use core::fmt;
+pub use theme::Theme;
 use url::Url;
 
 #[derive(Clone, Debug)]
