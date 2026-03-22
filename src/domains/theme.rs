@@ -28,7 +28,9 @@ impl Theme {
     }
 
     pub fn apply_to_md_tui(&self) {
-        use md_tui::util::colors::{color_config, heading_colors, set_color_config, set_heading_colors};
+        use md_tui::util::colors::{
+            color_config, heading_colors, set_color_config, set_heading_colors,
+        };
 
         let mut config = color_config();
         // Map minimal theme colors while preserving md-tui defaults for the rest.

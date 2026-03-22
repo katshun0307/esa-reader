@@ -3,8 +3,7 @@ use chrono::DateTime;
 use esa_api::apis::{
     configuration::Configuration,
     default_api::{
-        self, V1TeamsTeamNamePostsGetParams,
-        V1TeamsTeamNamePostsPostNumberStarDeleteParams,
+        self, V1TeamsTeamNamePostsGetParams, V1TeamsTeamNamePostsPostNumberStarDeleteParams,
         V1TeamsTeamNamePostsPostNumberStarPostParams,
         V1TeamsTeamNamePostsPostNumberWatchDeleteParams,
         V1TeamsTeamNamePostsPostNumberWatchPostParams,
@@ -41,11 +40,7 @@ impl EsaClient {
 #[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait EsaClientHttpGateway: Send + Sync {
-    async fn fetch_posts(
-        &self,
-        query: Option<String>,
-        page: i32,
-    ) -> anyhow::Result<PostListPage>;
+    async fn fetch_posts(&self, query: Option<String>, page: i32) -> anyhow::Result<PostListPage>;
     async fn fetch_post(&self, post_number: &PostNumber) -> Option<Post>;
     async fn fetch_post_content(&self, post_number: &PostNumber) -> anyhow::Result<String>;
     async fn watch_post(&self, post_number: &PostNumber) -> anyhow::Result<()>;
@@ -56,11 +51,7 @@ pub trait EsaClientHttpGateway: Send + Sync {
 
 #[async_trait::async_trait]
 impl EsaClientHttpGateway for EsaClient {
-    async fn fetch_posts(
-        &self,
-        query: Option<String>,
-        page: i32,
-    ) -> anyhow::Result<PostListPage> {
+    async fn fetch_posts(&self, query: Option<String>, page: i32) -> anyhow::Result<PostListPage> {
         let params = V1TeamsTeamNamePostsGetParams {
             team_name: self.team_name.to_string(),
             q: query.or_else(|| Some("sort:updated".to_string())),
@@ -244,7 +235,7 @@ mod tests {
     }
 
     /// A fully-populated API post that passes all required-field checks in
-    /// `convert_post`.  Individual tests can override fields using struct
+    /// `convert_post`. Individual tests can override fields using struct
     /// update syntax to exercise specific edge-cases.
     #[fixture]
     fn api_post(user_summary: Box<UserSummary>) -> ApiPost {

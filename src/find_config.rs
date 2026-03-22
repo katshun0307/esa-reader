@@ -202,8 +202,7 @@ mod tests {
         let result = find_config_path("esa-reader", "config.toml").unwrap();
 
         assert_eq!(
-            result.recommended,
-            result.candidates[0],
+            result.recommended, result.candidates[0],
             "recommended must equal candidates[0]"
         );
     }
@@ -212,8 +211,7 @@ mod tests {
     /// (We use a deliberately unlikely app name so no real config is present.)
     #[rstest]
     fn test_find_config_path_existing_is_none_when_absent() {
-        let result =
-            find_config_path("esa-reader-nonexistent-xyz-12345", "config.toml").unwrap();
+        let result = find_config_path("esa-reader-nonexistent-xyz-12345", "config.toml").unwrap();
         assert!(
             result.existing.is_none(),
             "no config should exist for a made-up app name"

@@ -12,8 +12,8 @@ extern crate insta;
 
 use app::App;
 use crossterm::{
-    execute,
     event::{KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags},
+    execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use find_config::find_config_path;

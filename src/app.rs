@@ -2,15 +2,15 @@ use crate::domains::{Config, Theme};
 use crate::http_gateways::EsaClient;
 use crate::widgets::{self};
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind};
+use futures_util::StreamExt;
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Layout},
 };
 use std::io;
-use futures_util::StreamExt;
+use std::process::Command;
 use std::time::Duration;
 use tokio::time::interval;
-use std::process::Command;
 
 pub struct App {
     exit: bool,
@@ -42,7 +42,9 @@ impl App {
 
     #[allow(dead_code)]
     pub async fn switch_workspace(&mut self, name: &str) {
-        if name == self.selected_workspace || !self.config.workspace_names().contains(&name.to_string()) {
+        if name == self.selected_workspace
+            || !self.config.workspace_names().contains(&name.to_string())
+        {
             return;
         }
         self.selected_workspace = name.to_string();
@@ -130,8 +132,10 @@ impl App {
         #[cfg(target_os = "linux")]
         let result = Command::new("xdg-open").arg(url).status();
         #[cfg(not(any(target_os = "macos", target_os = "linux")))]
-        let result: Result<std::process::ExitStatus, std::io::Error> =
-            Err(std::io::Error::new(std::io::ErrorKind::Other, "unsupported OS"));
+        let result: Result<std::process::ExitStatus, std::io::Error> = Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "unsupported OS",
+        ));
         if let Err(e) = result {
             eprintln!("failed to open browser: {}", e);
         }

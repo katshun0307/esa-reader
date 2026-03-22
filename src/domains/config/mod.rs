@@ -191,10 +191,7 @@ mod tests {
             ..ThemeConfig::default()
         };
         let config = Config {
-            workspaces: BTreeMap::from([(
-                "ws".to_string(),
-                make_workspace(Some("custom")),
-            )]),
+            workspaces: BTreeMap::from([("ws".to_string(), make_workspace(Some("custom")))]),
             themes: BTreeMap::from([("custom".to_string(), custom.clone())]),
         };
 
@@ -212,10 +209,7 @@ mod tests {
         #[case] expected: &ThemeConfig,
     ) {
         let config = Config {
-            workspaces: BTreeMap::from([(
-                "ws".to_string(),
-                make_workspace(Some(theme_name)),
-            )]),
+            workspaces: BTreeMap::from([("ws".to_string(), make_workspace(Some(theme_name)))]),
             themes: BTreeMap::new(), // no custom themes — must fall back to built-ins
         };
 
@@ -229,10 +223,7 @@ mod tests {
     #[rstest]
     fn test_get_theme_unknown_name_falls_back_to_default() {
         let config = Config {
-            workspaces: BTreeMap::from([(
-                "ws".to_string(),
-                make_workspace(Some("nonexistent")),
-            )]),
+            workspaces: BTreeMap::from([("ws".to_string(), make_workspace(Some("nonexistent")))]),
             themes: BTreeMap::new(),
         };
 
