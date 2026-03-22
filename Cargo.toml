@@ -19,3 +19,6 @@ async-trait = "0.1.89"
 futures-util = "0.3.31"
 rstest = "0.26.1"
 insta = { version = "1.46.1", features = ["redactions", "json"] }
+
+[dev-dependencies]
+mockall = "0.13"

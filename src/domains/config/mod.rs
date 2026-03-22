@@ -128,27 +128,30 @@ fn default_endpoint() -> String {
 mod tests {
     use super::*;
     use insta::assert_snapshot;
-    use rstest::fixture;
+    use rstest::{fixture, rstest};
+
+    // ── Fixtures ──────────────────────────────────────────────────────────────
+
+    fn make_workspace(theme: Option<&str>) -> WorkspaceConfig {
+        WorkspaceConfig {
+            team_name: "my_team".to_string(),
+            api_endpoint: "https://api.esa.io".to_string(),
+            token: "my_token".to_string(),
+            post_views: BTreeMap::from([(
+                "all".to_string(),
+                PostViewConfig {
+                    title: "All Posts".to_string(),
+                    query: Some("sort:updated".to_string()),
+                },
+            )]),
+            theme: theme.map(str::to_string),
+        }
+    }
 
     #[fixture]
     fn config() -> Config {
         Config {
-            workspaces: BTreeMap::from([(
-                "default".to_string(),
-                WorkspaceConfig {
-                    team_name: "my_team".to_string(),
-                    api_endpoint: "https://api.esa.io".to_string(),
-                    token: "my_token".to_string(),
-                    post_views: BTreeMap::from([(
-                        "all".to_string(),
-                        PostViewConfig {
-                            title: "All Posts".to_string(),
-                            query: Some("sort:updated".to_string()),
-                        },
-                    )]),
-                    theme: Some("dark".to_string()),
-                },
-            )]),
+            workspaces: BTreeMap::from([("default".to_string(), make_workspace(Some("dark")))]),
             themes: BTreeMap::from([
                 ("dark".to_string(), THEME_CONFIG_DARK.clone()),
                 ("light".to_string(), THEME_CONFIG_LIGHT.clone()),
@@ -156,9 +159,96 @@ mod tests {
         }
     }
 
-    #[rstest::rstest]
+    // ── Serialization (snapshot) ───────────────────────────────────────────────
+
+    #[rstest]
     fn test_serialize_config(config: Config) {
         let toml_str = toml::to_string(&config).unwrap();
         assert_snapshot!(toml_str);
+    }
+
+    // ── Config::workspace_names / first_workspace_name ────────────────────────
+
+    #[rstest]
+    fn test_workspace_names_returns_all_keys(config: Config) {
+        let names = config.workspace_names();
+        assert_eq!(names, vec!["default"]);
+    }
+
+    #[rstest]
+    fn test_first_workspace_name(config: Config) {
+        assert_eq!(config.first_workspace_name(), "default");
+    }
+
+    // ── Config::get_theme ─────────────────────────────────────────────────────
+
+    /// When a workspace references a custom theme defined in `[themes]`, that
+    /// exact theme should be returned.
+    #[rstest]
+    fn test_get_theme_returns_custom_theme() {
+        let custom = ThemeConfig {
+            primary: Some("#FF0000".to_string()),
+            ..ThemeConfig::default()
+        };
+        let config = Config {
+            workspaces: BTreeMap::from([(
+                "ws".to_string(),
+                make_workspace(Some("custom")),
+            )]),
+            themes: BTreeMap::from([("custom".to_string(), custom.clone())]),
+        };
+
+        let theme = config.get_theme("ws");
+        assert_eq!(theme.primary, custom.primary);
+    }
+
+    /// Built-in "dark" / "light" themes are resolved even when they aren't
+    /// listed in `[themes]`.
+    #[rstest]
+    #[case("dark", &THEME_CONFIG_DARK)]
+    #[case("light", &THEME_CONFIG_LIGHT)]
+    fn test_get_theme_resolves_builtin_themes(
+        #[case] theme_name: &str,
+        #[case] expected: &ThemeConfig,
+    ) {
+        let config = Config {
+            workspaces: BTreeMap::from([(
+                "ws".to_string(),
+                make_workspace(Some(theme_name)),
+            )]),
+            themes: BTreeMap::new(), // no custom themes — must fall back to built-ins
+        };
+
+        let theme = config.get_theme("ws");
+        assert_eq!(theme.primary, expected.primary);
+        assert_eq!(theme.accent, expected.accent);
+    }
+
+    /// When the referenced theme name doesn't match anything, the default
+    /// (dark) theme is returned.
+    #[rstest]
+    fn test_get_theme_unknown_name_falls_back_to_default() {
+        let config = Config {
+            workspaces: BTreeMap::from([(
+                "ws".to_string(),
+                make_workspace(Some("nonexistent")),
+            )]),
+            themes: BTreeMap::new(),
+        };
+
+        let theme = config.get_theme("ws");
+        assert_eq!(theme.primary, ThemeConfig::default().primary);
+    }
+
+    /// A workspace with no `theme` field set also returns the default.
+    #[rstest]
+    fn test_get_theme_no_theme_configured_returns_default() {
+        let config = Config {
+            workspaces: BTreeMap::from([("ws".to_string(), make_workspace(None))]),
+            themes: BTreeMap::new(),
+        };
+
+        let theme = config.get_theme("ws");
+        assert_eq!(theme.primary, ThemeConfig::default().primary);
     }
 }
